@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using battleship_royale_be.Usecase.StartNewGame;
 using battleship_royale_be.Usecase.GetGameById;
 using battleship_royale_be.Usecase.Shoot;
+using battleship_royale_be.Hubs;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -19,6 +20,7 @@ builder.Services.AddDbContext<BattleshipAPIContext>(options =>
 builder.Services.AddScoped<IStartNewGameUseCase, StartNewGameUseCase>();
 builder.Services.AddScoped<IGetGameByIdUseCase, GetGameByIdUseCase>();
 builder.Services.AddScoped<IShootUseCase, ShootUseCase>();
+builder.Services.AddSignalR();
 
 var app = builder.Build();
 
@@ -51,5 +53,7 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.MapHub<GameHub>("/Game");
 
 app.Run();
