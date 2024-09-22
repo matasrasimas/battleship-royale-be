@@ -47,5 +47,22 @@ namespace battleship_royale_be.Hubs
 
             }
         }
+
+        public override async Task OnDisconnectedAsync(Exception exception)
+        {
+            await LeaveSpecificGame();
+
+            await base.OnDisconnectedAsync(exception);
+        }
+
+        public async Task LeaveSpecificGame()
+        {
+            var connectionToRemove = await _context.UserConnections.Where(conn => conn.Id == Context.ConnectionId).FirstOrDefaultAsync();
+            if (connectionToRemove != null) {
+                await Groups.RemoveFromGroupAsync(Context.ConnectionId, connectionToRemove.GameId);
+                _context.UserConnections.Remove(connectionToRemove);
+                await _context.SaveChangesAsync();
+            }
+        }
     }
 }
