@@ -9,6 +9,7 @@ namespace battleship_royale_be.Data
         }
 
         public DbSet<Game> Games { get; set; }
+        public DbSet<Player> Players { get; set; }
         public DbSet<Ship> Ships { get; set; }
         public DbSet<Cell> Cells { get; set; }
         public DbSet<Coordinates> Coordinates { get; set; }

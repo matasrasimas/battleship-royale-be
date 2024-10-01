@@ -4,16 +4,14 @@ using battleship_royale_be.Models;
 
 namespace battleship_royale_be.Usecase.StartNewGame
 {
-    public class StartNewGameUseCase : IStartNewGameUseCase
+    public class CreateNewPlayerUseCase : ICreateNewPlayerUseCase
     {
-        private readonly BattleshipAPIContext _context;
 
-        public StartNewGameUseCase(BattleshipAPIContext context)
+        public CreateNewPlayerUseCase()
         {
-            _context = context;
         }
 
-        public async Task<Guid> Start()
+        public Player CreatePlayer(string connectionId)
         {
             Board board = ShipsPlacer.PlaceShipsOnBoard();
 
@@ -25,19 +23,16 @@ namespace battleship_royale_be.Usecase.StartNewGame
                 }
             }
 
-            Game game = new Game(
+            Player player = new Player(
                 Guid.NewGuid(),
+                connectionId,
                 cells,
                 board.Ships,
-                "",
-                "IN_PROGRESS"
+                "IN_PROGRESS",
+                false
             );
- 
 
-            await _context.Games.AddAsync(game);
-            await _context.SaveChangesAsync();
-
-            return game.Id;
+            return player;
         }
     }
 }

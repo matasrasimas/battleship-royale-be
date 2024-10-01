@@ -4,6 +4,9 @@ using battleship_royale_be.Usecase.StartNewGame;
 using battleship_royale_be.Usecase.GetGameById;
 using battleship_royale_be.Usecase.Shoot;
 using battleship_royale_be.Hubs;
+using battleship_royale_be.Usecase.CreateNewGame;
+using battleship_royale_be.Usecase.FindGameUseCase;
+using battleship_royale_be.Usecase.Surrender;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -17,9 +20,12 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<BattleshipAPIContext>(options => 
    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnectionString")));
 
-builder.Services.AddScoped<IStartNewGameUseCase, StartNewGameUseCase>();
+builder.Services.AddScoped<ICreateNewPlayerUseCase, CreateNewPlayerUseCase>();
 builder.Services.AddScoped<IGetGameByIdUseCase, GetGameByIdUseCase>();
 builder.Services.AddScoped<IShootUseCase, ShootUseCase>();
+builder.Services.AddScoped<IAddPlayerToGameUseCase, AddPlayerToGameUseCase>();
+builder.Services.AddScoped<IFindGameUseCase, FindGameUseCase>();
+builder.Services.AddScoped<ISurrenderUseCase, SurrenderUseCase>();
 builder.Services.AddSignalR();
 
 var app = builder.Build();

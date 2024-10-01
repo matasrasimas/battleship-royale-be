@@ -4,6 +4,8 @@ using battleship_royale_be.Usecase.StartNewGame;
 using battleship_royale_be.Usecase.GetGameById;
 using battleship_royale_be.Models;
 using battleship_royale_be.Usecase.Shoot;
+using battleship_royale_be.Usecase.CreateNewGame;
+using battleship_royale_be.Usecase.FindGameUseCase;
 
 namespace battleship_royale_be.Controllers
 {
@@ -12,17 +14,20 @@ namespace battleship_royale_be.Controllers
     public class GamesController : Controller
     {
         private readonly BattleshipAPIContext _context;
-        private readonly IStartNewGameUseCase _startNewGameUseCase;
+        private readonly IFindGameUseCase _findGameUseCase;
+        private readonly IAddPlayerToGameUseCase _addPlayerToGameUseCase;
         private readonly IGetGameByIdUseCase _getGameByIdUseCase;
         private readonly IShootUseCase _shootUseCase;
 
         public GamesController(BattleshipAPIContext context,
-            IStartNewGameUseCase startNewGameUseCase,
+            IFindGameUseCase findGameUseCase,
+            IAddPlayerToGameUseCase addPlayerToGameUseCase,
             IGetGameByIdUseCase getGameByIdUseCase,
             IShootUseCase shootUseCase)
         {
             _context = context;
-            _startNewGameUseCase = startNewGameUseCase;
+            _findGameUseCase = findGameUseCase;
+            _addPlayerToGameUseCase = addPlayerToGameUseCase;
             _getGameByIdUseCase = getGameByIdUseCase;
             _shootUseCase = shootUseCase;
         }
@@ -39,23 +44,11 @@ namespace battleship_royale_be.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<Guid>> StartNewGame()
+        public async Task<ActionResult<Guid>> FindGame()
         {
-            Guid id = await _startNewGameUseCase.Start();
+            Guid id = await _findGameUseCase.FindGame();
 
             return Ok(id);
-        }
-
-        [HttpPut("{id}")]
-        public async Task<ActionResult<Game>> MakeShot(Guid id, [FromBody] ShotCoordinates shotcoords) {
-            var gameAfterShot = await _shootUseCase.Shoot(id, shotcoords);
-
-            if (gameAfterShot == null)
-                return BadRequest(new { message = "Game by given id not found" });
-
-            var ggg = await _getGameByIdUseCase.Get(id);
-
-            return Ok(ggg);
         }
     }
 }
