@@ -53,7 +53,7 @@ namespace battleship_royale_be.Usecase.Shoot
                 if (board.CanShoot(coord))
                 {
                     var cell = newGrid[coord.Row, coord.Col];
-                    newGrid[coord.Row, coord.Col] = new Cell(Guid.NewGuid(), coord.Row, coord.Col, true, cell.IsShip);
+                    newGrid[coord.Row, coord.Col] = new Cell(Guid.NewGuid(), coord.Row, coord.Col, cell.IsIsland ? false : true, cell.IsShip, cell.IsIsland);
                 }
             }
 

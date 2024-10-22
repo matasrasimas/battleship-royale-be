@@ -7,13 +7,15 @@
         public int Col { get; set; }
         public bool IsHit { get; set; }
         public bool IsShip { get; set; }
+        public bool IsIsland { get; set; }
 
-        public Cell(Guid Id, int Row, int Col, bool IsHit, bool IsShip) {
+        public Cell(Guid Id, int Row, int Col, bool IsHit, bool IsShip, bool IsIsland) {
             this.Id = Id;
             this.Row = Row;
             this.Col = Col;
             this.IsHit = IsHit;
             this.IsShip = IsShip;
+            this.IsIsland = IsIsland;
         }
     }
 }

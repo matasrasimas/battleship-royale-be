@@ -22,7 +22,7 @@ namespace battleship_royale_be.Usecase.StartNewGame
 
         private static Board PlaceShipRandomly(Board board, Ship ship)
         {
-            if (board.Ships.Count == 10)
+            if (board.Ships.Count == 6)
                 return board;
 
             int maxAttempts = 1000;
@@ -59,7 +59,7 @@ namespace battleship_royale_be.Usecase.StartNewGame
             for (int i = 0; i < ship.HitPoints; i++)
             {
                 newCoordinates.Add(new Coordinates(Guid.NewGuid(), startRow + i, startCol));
-                newGrid[startRow + i, startCol] = new Cell(Guid.NewGuid(), startRow + i, startCol, false, true);
+                newGrid[startRow + i, startCol] = new Cell(Guid.NewGuid(), startRow + i, startCol, false, true, false);
             }
 
             return AddShipToGame(board, ship, newCoordinates, newGrid);
@@ -75,7 +75,7 @@ namespace battleship_royale_be.Usecase.StartNewGame
             for (int i = 0; i < ship.HitPoints; i++)
             {
                 newCoordinates.Add(new Coordinates(Guid.NewGuid(), startRow, startCol + i));
-                newGrid[startRow, startCol + i] = new Cell(Guid.NewGuid(), startRow, startCol + i, false, true);
+                newGrid[startRow, startCol + i] = new Cell(Guid.NewGuid(), startRow, startCol + i, false, true, false);
             }
 
             return AddShipToGame(board, ship, newCoordinates, newGrid);
