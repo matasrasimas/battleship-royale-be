@@ -17,7 +17,7 @@
         {
             List<Cell> clonedCells = new List<Cell>();
             foreach (Cell cell in player.Cells)
-                clonedCells.Add(new Cell(Guid.NewGuid(), cell.Row, cell.Col, cell.IsHit, cell.IsShip));
+                clonedCells.Add(new Cell(Guid.NewGuid(), cell.Row, cell.Col, cell.IsHit, cell.IsShip, cell.IsIsland));
 
             List<Cell> sortedCells = clonedCells
                 .OrderBy(c => c.Row)
@@ -76,7 +76,7 @@
         {
             List<Cell> clonedCells = new List<Cell>();
             foreach(Cell cell in cells)
-                clonedCells.Add(new Cell(Guid.NewGuid(), cell.Row, cell.Col, cell.IsHit, cell.IsShip));
+                clonedCells.Add(new Cell(Guid.NewGuid(), cell.Row, cell.Col, cell.IsHit, cell.IsShip, cell.IsIsland));
 
             List<Cell> sortedCells = clonedCells
                 .OrderBy(c => c.Row)

@@ -20,11 +20,10 @@ namespace battleship_royale_be.Usecase.StartNewGame
         {
             return new List<ShipType>
         {
-            ShipType.CARRIER, ShipType.CARRIER, ShipType.CARRIER,
-            ShipType.BATTLESHIP, ShipType.BATTLESHIP, ShipType.BATTLESHIP,
-            ShipType.CRUISER, ShipType.CRUISER,
+            ShipType.CARRIER, ShipType.CARRIER,
+            ShipType.BATTLESHIP, ShipType.BATTLESHIP,
+            ShipType.CRUISER,
             ShipType.SUBMARINE,
-            ShipType.DESTROYER
         };
         }
 
