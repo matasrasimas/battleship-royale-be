@@ -125,8 +125,13 @@ namespace battleship_royale_be.Hubs
             var conn = await _context.UserConnections.Where(conn => conn.Id == Context.ConnectionId).FirstOrDefaultAsync();
             if (conn != null)
             {
-                await Clients.Group(conn.GameId)
-                    .SendAsync("ReceiveMessage", conn.Id, message);
+                var player = _context.Players.Where(player => player.ConnectionId == conn.Id).FirstOrDefault();
+                if (player != null)
+                {
+                    var playerIndex = _context.Players.ToList().IndexOf(player);
+                    await Clients.Group(conn.GameId)
+                        .SendAsync("ReceiveMessage", "Player " + playerIndex, message);
+                }
             }
         }
 
