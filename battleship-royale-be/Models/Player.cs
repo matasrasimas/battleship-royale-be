@@ -21,5 +21,6 @@ namespace battleship_royale_be.Models
             this.GameStatus = GameStatus;
             this.IsYourTurn = IsYourTurn;
         }
+
     }
 }

@@ -11,9 +11,9 @@ namespace battleship_royale_be.Usecase.StartNewGame
         {
         }
 
-        public Player CreatePlayer(string connectionId)
+        public Player CreatePlayer(string connectionId, int gameLevel)
         {
-            Board board = ShipsPlacer.PlaceShipsOnBoard();
+            Board board = ShipsPlacer.PlaceShipsOnBoard(gameLevel);
 
             List<Cell> cells = new List<Cell>();
 

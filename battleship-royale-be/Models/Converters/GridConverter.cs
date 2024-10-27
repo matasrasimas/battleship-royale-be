@@ -13,7 +13,8 @@
         }
 
         public static Cell[,] FromListToArray(List<Cell> input) {
-            Cell[,] grid = new Cell[10, 10];
+            int length = input.Count == 225 ? 15 : 10;
+            Cell[,] grid = new Cell[length, length];
             List<Cell> sortedCells = input
                 .OrderBy(c => c.Row)
                 .ThenBy(c => c.Col)
