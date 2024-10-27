@@ -46,7 +46,8 @@ namespace battleship_royale_be.Hubs
                 .Where(g => g.Id.ToString() == conn.GameId)
                 .FirstOrDefaultAsync();
 
-            if (gameToJoin.Players.Count >= 2) {
+            if (gameToJoin.Players.Count >= 2)
+            {
                 await Clients.Caller
                     .SendAsync("JoinSpecificGameError", conn.Id, "game is full");
                 return;
@@ -57,19 +58,24 @@ namespace battleship_royale_be.Hubs
             Game gameAfterAddedPlayer = GameBuilder.From(gameToJoin).Build();
             gameAfterAddedPlayer.Players.Add(playerToAdd);
 
-            if (gameAfterAddedPlayer.Players.Count >= 2) {
+            if (gameAfterAddedPlayer.Players.Count >= 2)
+            {
                 Random random = new Random();
                 int randomIndex = random.Next(gameAfterAddedPlayer.Players.Count);
                 Player randomPlayer = gameAfterAddedPlayer.Players[randomIndex];
                 randomPlayer.IsYourTurn = true;
             }
 
-            foreach (Player player in gameToJoin.Players) {
-                foreach (Cell cell in player.Cells) {
+            foreach (Player player in gameToJoin.Players)
+            {
+                foreach (Cell cell in player.Cells)
+                {
                     _context.Cells.Remove(cell);
                 }
-                foreach (Ship ship in player.Ships) {
-                    foreach (Coordinates coord in ship.Coordinates) {
+                foreach (Ship ship in player.Ships)
+                {
+                    foreach (Coordinates coord in ship.Coordinates)
+                    {
                         _context.Coordinates.Remove(coord);
                     }
                     _context.Ships.Remove(ship);
@@ -89,18 +95,21 @@ namespace battleship_royale_be.Hubs
                 .SendAsync("JoinSpecificGame", "admin", gameAfterAddedPlayer);
         }
 
-        public async Task MakeShot(ShotCoordinates shotCoords) {
+        public async Task MakeShot(ShotCoordinates shotCoords)
+        {
             var conn = await _context.UserConnections.Where(conn => conn.Id == Context.ConnectionId).FirstOrDefaultAsync();
-            if (conn != null) {
+            if (conn != null)
+            {
                 Game gameAfterShot = await _shootUseCase.Shoot(Guid.Parse(conn.GameId), shotCoords, conn.Id);
-                if(gameAfterShot != null)
+                if (gameAfterShot != null)
                     await Clients.Group(conn.GameId)
                         .SendAsync("ReceiveGameAfterShot", conn.Id, gameAfterShot);
 
             }
         }
 
-        public async Task HandleSurrender() {
+        public async Task HandleSurrender()
+        {
             var conn = await _context.UserConnections.Where(conn => conn.Id == Context.ConnectionId).FirstOrDefaultAsync();
             if (conn != null)
             {
@@ -108,6 +117,16 @@ namespace battleship_royale_be.Hubs
                 if (gameAfterSurrender != null)
                     await Clients.Group(conn.GameId)
                         .SendAsync("ReceiveGameAfterSurrender", conn.Id, gameAfterSurrender);
+            }
+        }
+
+        public async Task SendMessage(string message)
+        {
+            var conn = await _context.UserConnections.Where(conn => conn.Id == Context.ConnectionId).FirstOrDefaultAsync();
+            if (conn != null)
+            {
+                await Clients.Group(conn.GameId)
+                    .SendAsync("ReceiveMessage", conn.Id, message);
             }
         }
 
@@ -121,14 +140,16 @@ namespace battleship_royale_be.Hubs
         public async Task LeaveSpecificGame()
         {
             var connectionToRemove = await _context.UserConnections.Where(conn => conn.Id == Context.ConnectionId).FirstOrDefaultAsync();
-            if (connectionToRemove != null) {
+            if (connectionToRemove != null)
+            {
                 await Groups.RemoveFromGroupAsync(Context.ConnectionId, connectionToRemove.GameId);
                 _context.UserConnections.Remove(connectionToRemove);
                 await _context.SaveChangesAsync();
             }
         }
 
-        public async Task GetConnectionId() {
+        public async Task GetConnectionId()
+        {
             await Clients.Caller
                 .SendAsync("GetYourConnectionId", Context.ConnectionId, Context.ConnectionId);
         }
