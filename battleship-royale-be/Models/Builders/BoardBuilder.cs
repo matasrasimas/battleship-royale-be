@@ -23,9 +23,24 @@ namespace battleship_royale_be.Models.Builders
             return builder;
         }
 
-        public static BoardBuilder DefaultValues()
+        public BoardBuilder SetGrid(Cell[,] grid)
         {
-            var builder = new BoardBuilder();
+            this.grid = (Cell[,])grid.Clone();
+            return this;
+        }
+
+        public BoardBuilder SetShips(List<Ship> ships)
+        {
+            this.ships = new List<Ship>(ships);
+            return this;
+        }
+
+        public Board Build() {
+            return new Board(grid, ships);
+        }
+
+        public static Board BuildLevel1Board()
+        {
             var random = new Random();
             var islandCells = new HashSet<(int, int)>();
 
@@ -54,40 +69,70 @@ namespace battleship_royale_be.Models.Builders
             }
 
 
-            builder.grid = new Cell[10, 10];
+            Cell[,] grid = new Cell[10, 10];
             for (int i = 0; i < 10; i++)
             {
                 for (int j = 0; j < 10; j++)
                 {
                     DesignPatterns.FactoryMethod.Cells.Cell cellToPlace = builtGrid[i, j];
                     if (cellToPlace is WaterCell waterCell)
-                        builder.grid[i, j] = new Cell(waterCell.Id, i, j, waterCell.IsHit , waterCell.IsShip, false);
+                        grid[i, j] = new Cell(waterCell.Id, i, j, waterCell.IsHit, waterCell.IsShip, false);
 
-                    else if(cellToPlace is IslandCell islandCell)
-                        builder.grid[i, j] = new Cell(islandCell.Id, i, j, false, false, true);
+                    else if (cellToPlace is IslandCell islandCell)
+                        grid[i, j] = new Cell(islandCell.Id, i, j, false, false, true);
 
                 }
             }
 
-            builder.ships = new List<Ship>();
-
-            return builder;
+            List<Ship> ships = new List<Ship>();
+            return new Board(grid, ships);
         }
 
-        public BoardBuilder SetGrid(Cell[,] grid)
-        {
-            this.grid = (Cell[,])grid.Clone();
-            return this;
-        }
+        public static Board BuildLevel2Board() {
+            var random = new Random();
+            var islandCells = new HashSet<(int, int)>();
 
-        public BoardBuilder SetShips(List<Ship> ships)
-        {
-            this.ships = new List<Ship>(ships);
-            return this;
-        }
+            CellCreator waterCellCreator = new WaterCellCreator();
+            CellCreator islandCellCreator = new IslandCellCreator();
 
-        public Board Build()
-        {
+            DesignPatterns.FactoryMethod.Cells.Cell[,] builtGrid = new DesignPatterns.FactoryMethod.Cells.Cell[15, 15];
+            for (int i = 0; i < 15; i++)
+            {
+                for (int j = 0; j < 15; j++)
+                {
+                    waterCellCreator.PlaceCellOnBoard(builtGrid, i, j);
+                }
+            }
+
+            while (islandCells.Count < 15)
+            {
+                int randomRow = random.Next(0, 15);
+                int randomCol = random.Next(0, 15);
+
+                if (!islandCells.Contains((randomRow, randomCol)))
+                {
+                    islandCells.Add((randomRow, randomCol));
+                    islandCellCreator.PlaceCellOnBoard(builtGrid, randomRow, randomCol);
+                }
+            }
+
+
+            Cell[,] grid = new Cell[15, 15];
+            for (int i = 0; i < 15; i++)
+            {
+                for (int j = 0; j < 15; j++)
+                {
+                    DesignPatterns.FactoryMethod.Cells.Cell cellToPlace = builtGrid[i, j];
+                    if (cellToPlace is WaterCell waterCell)
+                        grid[i, j] = new Cell(waterCell.Id, i, j, waterCell.IsHit, waterCell.IsShip, false);
+
+                    else if (cellToPlace is IslandCell islandCell)
+                        grid[i, j] = new Cell(islandCell.Id, i, j, false, false, true);
+
+                }
+            }
+
+            List<Ship> ships = new List<Ship>();
             return new Board(grid, ships);
         }
     }

@@ -98,9 +98,7 @@ namespace battleship_royale_be.Usecase.Shoot
                 .Build(),
 
                 PlayerBuilder
-                .From(targetPlayer)
-                .SetCells(GridConverter.FromArrayToList(board.Grid))
-                .SetShips(new List<Ship>(board.Ships))
+                .From(ShipsMover.MoveShips(targetPlayer, new List<Ship>(board.Ships), board.Grid))
                 .SetGameStatus("IN_PROGRESS")
                 .SetIsYourTurn(true)
                 .Build()

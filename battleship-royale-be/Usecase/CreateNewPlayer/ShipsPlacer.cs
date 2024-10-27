@@ -6,30 +6,30 @@ namespace battleship_royale_be.Usecase.StartNewGame
     public static class ShipsPlacer
     {
 
-        public static Board PlaceShipsOnBoard()
+        public static Board PlaceShipsOnBoard(int gameLevel)
         {
-            var board = BoardBuilder
-                .DefaultValues()
-                .Build();
+            var board = gameLevel == 1
+                ? BoardBuilder.BuildLevel1Board()
+                : BoardBuilder.BuildLevel2Board();
 
-            List<Ship> ships = ShipsListGenerator.Generate();
+            List<Ship> ships = ShipsListGenerator.Generate(gameLevel);
             foreach (Ship ship in ships)
             {
-                board = PlaceShipRandomly(board, ship);
+                board = PlaceShipRandomly(board, ship, gameLevel);
             }
             return board;
         }
 
-        private static Board PlaceShipRandomly(Board board, Ship ship)
+        private static Board PlaceShipRandomly(Board board, Ship ship, int gameLevel)
         {
             if (board.Ships.Count == 6)
                 return board;
 
             int maxAttempts = 1000;
-            return AttemptToPlaceShip(board, ship, maxAttempts);
+            return AttemptToPlaceShip(board, ship, maxAttempts, gameLevel);
         }
 
-        private static Board AttemptToPlaceShip(Board board, Ship ship, int maxAttempts)
+        private static Board AttemptToPlaceShip(Board board, Ship ship, int maxAttempts, int gameLevel)
         {
             int attempts = 0;
             while (attempts < maxAttempts)
@@ -39,7 +39,7 @@ namespace battleship_royale_be.Usecase.StartNewGame
                     return PlaceShip(board, ship, randomCoordinates);
                 attempts++;
             }
-            return PlaceShipsOnBoard();
+            return PlaceShipsOnBoard(gameLevel);
         }
 
         private static Board PlaceShip(Board board, Ship ship, Coordinates startCoords)
@@ -89,12 +89,12 @@ namespace battleship_royale_be.Usecase.StartNewGame
                 .Build();
 
             List<Ship> newShipsList = new List<Ship>(board.Ships)
-        {
-            newShip
-        };
+            {
+              newShip
+            };
 
             return BoardBuilder
-                .DefaultValues()
+                .From(board)
                 .SetGrid(newGrid)
                 .SetShips(newShipsList)
                 .Build();
