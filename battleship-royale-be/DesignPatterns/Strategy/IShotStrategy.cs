@@ -2,8 +2,8 @@ using battleship_royale_be.Models;
 
 namespace battleship_royale_be.DesignPatterns.Strategy
 {
-    public interface IShootingStrategy
+    public interface IShotStrategy
     {
-        void ExecuteShot(ShotCoordinates coordinates);
+        int GetMaxShots(Ship ship);
     }
 }

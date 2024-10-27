@@ -1,4 +1,5 @@
-﻿using battleship_royale_be.Models.Builders;
+﻿using battleship_royale_be.DesignPatterns.Strategy;
+using battleship_royale_be.Models.Builders;
 using battleship_royale_be.Models;
 using battleship_royale_be.Models.Converters;
 
@@ -7,6 +8,7 @@ namespace battleship_royale_be.Usecase.Shoot
     public static class ShotHandler
     {
         private static Dictionary<Guid, int> shotsFired = new Dictionary<Guid, int>();
+        private static IShotStrategy shotStrategy = new StandardShotStrategy(); 
 
         public static List<Player> HandleShot(Player attackerPlayer, Player targetPlayer, ShotCoordinates targetCoords)
         {
@@ -29,9 +31,9 @@ namespace battleship_royale_be.Usecase.Shoot
                 };
             }
 
-            // Get the attacking ship's max damage
+            // Get the attacking ship's max damage using the strategy
             var attackingShip = attackerPlayer.Ships.FirstOrDefault(ship => ship.HitPoints > 0);
-            int shotPower = GetMaxShotsForShip(attackingShip);
+            int shotPower = shotStrategy.GetMaxShots(attackingShip);
 
             return HandleActualShot(attackerPlayer, targetPlayer, targetCoords, board, shotPower);
         }
@@ -52,7 +54,7 @@ namespace battleship_royale_be.Usecase.Shoot
             else
             {
                 shotsFired[attackerPlayer.Id]++;
-                int maxShots = GetMaxShotsForShip(attackerPlayer.Ships.FirstOrDefault(ship => ship.HitPoints > 0));
+                int maxShots = shotStrategy.GetMaxShots(attackerPlayer.Ships.FirstOrDefault(ship => ship.HitPoints > 0));
 
                 if (shotsFired[attackerPlayer.Id] >= maxShots)
                 {
@@ -151,19 +153,6 @@ namespace battleship_royale_be.Usecase.Shoot
                 .SetGameStatus("IN_PROGRESS")
                 .SetIsYourTurn(true)
                 .Build()
-            };
-        }
-
-        private static int GetMaxShotsForShip(Ship ship)
-        {
-            return ship.HitPoints switch
-            {
-                1 => 1,
-                2 => 1,
-                3 => 2,
-                4 => 2,
-                5 => 3,
-                _ => throw new ArgumentOutOfRangeException(nameof(ship.HitPoints), $"Not expected hit points value: {ship.HitPoints}")
             };
         }
 
