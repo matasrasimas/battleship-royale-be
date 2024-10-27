@@ -1,7 +1,8 @@
+using battleship_royale_be.Models;
 namespace battleship_royale_be.DesignPatterns.Adapter
 {
     public interface IWeapon
     {
-        void Fire(int targetX, int targetY);
+        int GetDamage(Ship ship);
     }
 }

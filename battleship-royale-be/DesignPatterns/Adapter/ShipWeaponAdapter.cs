@@ -1,6 +1,7 @@
-using battleship_royale_be.DesignPatterns.Adapter;
 using battleship_royale_be.Models;
 
+namespace battleship_royale_be.DesignPatterns.Adapter
+{
     public class ShipWeaponAdapter : IWeapon
     {
         private readonly Ship _ship;
@@ -10,9 +11,10 @@ using battleship_royale_be.Models;
             _ship = ship ?? throw new ArgumentNullException(nameof(ship));
         }
 
-        public void Fire(int targetX, int targetY)
+        public int GetDamage(Ship ship)
         {
-            //TODO
+            IWeapon weapon = new StandardWeapon();
+            return weapon.GetDamage(ship);
         }
     }
-
+}
