@@ -6,7 +6,7 @@ namespace battleship_royale_be.Usecase.StartNewGame
     {
         public static bool CanPlaceShip(Cell[,] grid, Ship ship, Coordinates startCoords)
         {
-            return IsShipInsideGameBoard(grid, ship, startCoords) && !IsOverlappingWithAdjacentShips(grid, ship, startCoords);
+            return IsShipInsideGameBoard(grid, ship, startCoords) && !IsOverlappingWithAdjacentShips(grid, ship, startCoords) && !IsOverlappingWithIslands(grid, ship, startCoords);
         }
 
         private static bool IsShipInsideGameBoard(Cell[,] grid, Ship ship, Coordinates startCoords)
@@ -33,6 +33,24 @@ namespace battleship_royale_be.Usecase.StartNewGame
             return false;
         }
 
+        private static bool IsOverlappingWithIslands(Cell[,] grid, Ship ship, Coordinates startCoords)
+        {
+            Coordinates endCoords = ship.CalculateEndCoordinates(startCoords);
+
+            for (int i = startCoords.Row; i <= endCoords.Row; i++)
+            {
+                for (int j = startCoords.Col; j <= endCoords.Col; j++)
+                {
+                    Coordinates coordsToCheck = new Coordinates(Guid.NewGuid(), i, j);
+                    if (IsCellInsideGrid(grid, coordsToCheck) && CellContainsIsland(grid, coordsToCheck))
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
         private static bool IsCellInsideGrid(Cell[,] grid, Coordinates coords)
         {
             return coords.Row >= 0 && coords.Row < grid.GetLength(0) &&
@@ -42,6 +60,10 @@ namespace battleship_royale_be.Usecase.StartNewGame
         private static bool CellContainsShip(Cell[,] grid, Coordinates coords)
         {
             return grid[coords.Row, coords.Col].IsShip;
+        }
+
+        private static bool CellContainsIsland(Cell[,] grid, Coordinates coords) {
+            return grid[coords.Row, coords.Col].IsIsland;
         }
     }
 }

@@ -8,7 +8,7 @@
         public bool CanShoot(Coordinates coords)
         {
             bool canShoot = ShotIsWithinGridBounds(coords) && !CellHasAlreadyBeenHit(coords);
-            return ShotIsWithinGridBounds(coords) && !CellHasAlreadyBeenHit(coords);
+            return ShotIsWithinGridBounds(coords) && !CellHasAlreadyBeenHit(coords) && !CellContainsIsland(coords);
         }
 
         public Ship? FindShipByCoordinates(ShotCoordinates targetCoords)
@@ -27,6 +27,10 @@
         private bool CellHasAlreadyBeenHit(Coordinates coords)
         {
             return Grid[coords.Row, coords.Col].IsHit;
+        }
+
+        private bool CellContainsIsland(Coordinates coords) {
+            return Grid[coords.Row, coords.Col].IsIsland;
         }
 
         private bool ShotIsWithinGridBounds(Coordinates coords)

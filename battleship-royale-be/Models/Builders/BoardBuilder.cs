@@ -1,9 +1,14 @@
-﻿namespace battleship_royale_be.Models.Builders
+﻿using battleship_royale_be.DesignPatterns.FactoryMethod;
+using battleship_royale_be.DesignPatterns.FactoryMethod.Cells;
+using System;
+
+namespace battleship_royale_be.Models.Builders
 {
     public class BoardBuilder
     {
         private Cell[,] grid;
         private List<Ship> ships;
+
 
         private BoardBuilder() { }
 
@@ -21,13 +26,46 @@
         public static BoardBuilder DefaultValues()
         {
             var builder = new BoardBuilder();
+            var random = new Random();
+            var islandCells = new HashSet<(int, int)>();
+
+            CellCreator waterCellCreator = new WaterCellCreator();
+            CellCreator islandCellCreator = new IslandCellCreator();
+
+            DesignPatterns.FactoryMethod.Cells.Cell[,] builtGrid = new DesignPatterns.FactoryMethod.Cells.Cell[10, 10];
+            for (int i = 0; i < 10; i++)
+            {
+                for (int j = 0; j < 10; j++)
+                {
+                    waterCellCreator.PlaceCellOnBoard(builtGrid, i, j);
+                }
+            }
+
+            while (islandCells.Count < 10)
+            {
+                int randomRow = random.Next(0, 10);
+                int randomCol = random.Next(0, 10);
+
+                if (!islandCells.Contains((randomRow, randomCol)))
+                {
+                    islandCells.Add((randomRow, randomCol));
+                    islandCellCreator.PlaceCellOnBoard(builtGrid, randomRow, randomCol);
+                }
+            }
+
 
             builder.grid = new Cell[10, 10];
             for (int i = 0; i < 10; i++)
             {
                 for (int j = 0; j < 10; j++)
                 {
-                    builder.grid[i, j] = new Cell(Guid.NewGuid(), i, j, false, false);
+                    DesignPatterns.FactoryMethod.Cells.Cell cellToPlace = builtGrid[i, j];
+                    if (cellToPlace is WaterCell waterCell)
+                        builder.grid[i, j] = new Cell(waterCell.Id, i, j, waterCell.IsHit , waterCell.IsShip, false);
+
+                    else if(cellToPlace is IslandCell islandCell)
+                        builder.grid[i, j] = new Cell(islandCell.Id, i, j, false, false, true);
+
                 }
             }
 
