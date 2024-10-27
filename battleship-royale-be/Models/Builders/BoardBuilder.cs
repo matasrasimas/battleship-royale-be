@@ -18,7 +18,7 @@ namespace battleship_royale_be.Models.Builders
 
             builder.grid = (Cell[,])board.Grid.Clone();
 
-            builder.ships = new List<Ship>(board.Ships);
+            builder.ships = board.Ships.Select(item => (Ship)item.Clone()).ToList();
 
             return builder;
         }
