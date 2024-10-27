@@ -5,7 +5,7 @@ namespace battleship_royale_be.DesignPatterns.Strategy
 {
     public class SingleShotStrategy : IShootingStrategy
     {
-        public void ExecuteShoot(ShotCoordinates coordinates)
+        public void ExecuteShot(ShotCoordinates coordinates)
         {
             Console.WriteLine($"Single shot fired at coordinates ({coordinates.Row}, {coordinates.Col})");
             // Implement single-shot logic here

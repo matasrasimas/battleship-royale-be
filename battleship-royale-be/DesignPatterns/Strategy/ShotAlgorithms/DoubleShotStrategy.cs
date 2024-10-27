@@ -5,7 +5,7 @@ namespace battleship_royale_be.DesignPatterns.Strategy
 {
     public class DoubleShotStrategy : IShootingStrategy
     {
-        public void ExecuteShoot(ShotCoordinates coordinates)
+        public void ExecuteShot(ShotCoordinates coordinates)
         {
             Console.WriteLine($"Double shot fired at coordinates ({coordinates.Row}, {coordinates.Col})");
             // Implement double-shot logic here

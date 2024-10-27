@@ -6,6 +6,8 @@ namespace battleship_royale_be.Usecase.Shoot
 {
     public static class ShotHandler
     {
+        private static Dictionary<Guid, int> shotsFired = new Dictionary<Guid, int>();
+
         public static List<Player> HandleShot(Player attackerPlayer, Player targetPlayer, ShotCoordinates targetCoords)
         {
             Cell[,] grid = GridConverter.FromListToArray(targetPlayer.Cells);
@@ -14,10 +16,14 @@ namespace battleship_royale_be.Usecase.Shoot
                 new List<Ship>(targetPlayer.Ships)
             );
 
+            if (!shotsFired.ContainsKey(attackerPlayer.Id))
+            {
+                shotsFired[attackerPlayer.Id] = 0;
+            }
+
             if (!board.CanShoot(new Coordinates(Guid.NewGuid(), targetCoords.Row, targetCoords.Col)) || !attackerPlayer.IsYourTurn)
             {
                 return new List<Player> {
-
                     PlayerBuilder
                     .From(attackerPlayer)
                     .Build(),
@@ -28,14 +34,40 @@ namespace battleship_royale_be.Usecase.Shoot
                 };
             }
 
-            var gridAfterShot = MarkCellAsHit(board, targetCoords);
-            var newBoard = BoardBuilder
-                .From(board)
-                .SetGrid(gridAfterShot)
-                .SetShips(board.Ships)
-                .Build();
+            return HandleActualShot(attackerPlayer, targetPlayer, targetCoords, board);
+        }
 
-            return HandleShot(attackerPlayer, targetPlayer, targetCoords, newBoard);
+        private static List<Player> HandleActualShot(Player attackerPlayer, Player targetPlayer, ShotCoordinates targetCoords, Board board)
+        {
+            var cell = board.Grid[targetCoords.Row, targetCoords.Col];
+            bool isHit = cell.IsShip;
+
+            var attackingShip = attackerPlayer.Ships.FirstOrDefault(ship => ship.HitPoints > 0);
+            if (attackingShip == null)
+            {
+                throw new ApplicationException("Attacker has no ships.");
+            }
+            int maxShots = GetMaxShotsForShip(attackingShip);
+            int currentShotsFired = shotsFired[attackerPlayer.Id];
+
+            if (isHit)
+            {
+                shotsFired[attackerPlayer.Id]++;
+                return HandleSuccessfulShot(attackerPlayer, targetPlayer, targetCoords, board);
+            }
+            else
+            {
+                shotsFired[attackerPlayer.Id]++;
+
+
+                if (shotsFired[attackerPlayer.Id] >= maxShots)
+                {
+                    Console.WriteLine($"Player {attackerPlayer.Id} has reached maximum shots. Ending turn.");
+                    return HandleTurnEnd(attackerPlayer, targetPlayer, board); 
+                }
+
+                return HandleMissedShot(attackerPlayer, targetPlayer, board);
+            }
         }
 
         private static Cell[,] MarkCellAsHit(Board board, ShotCoordinates targetCoords)
@@ -45,19 +77,6 @@ namespace battleship_royale_be.Usecase.Shoot
             newGrid[targetCoords.Row, targetCoords.Col] =
                 new Cell(Guid.NewGuid(), targetCoords.Row, targetCoords.Col, true, cell.IsShip, cell.IsIsland);
             return newGrid;
-        }
-
-        private static List<Player> HandleShot(Player attackerPlayer, Player targetPlayer, ShotCoordinates targetCoords, Board board)
-        {
-            var cell = board.Grid[targetCoords.Row, targetCoords.Col];
-            if (cell.IsShip)
-            {
-                return HandleSuccessfulShot(attackerPlayer, targetPlayer, targetCoords, board);
-            }
-            else
-            {
-                return HandleMissedShot(attackerPlayer, targetPlayer, board);
-            }
         }
 
         private static List<Player> HandleSuccessfulShot(Player attackerPlayer, Player targetPlayer, ShotCoordinates targetCoords, Board board)
@@ -91,6 +110,38 @@ namespace battleship_royale_be.Usecase.Shoot
 
         private static List<Player> HandleMissedShot(Player attackerPlayer, Player targetPlayer, Board board)
         {
+            return new List<Player> {
+                PlayerBuilder
+                .From(attackerPlayer)
+                .SetIsYourTurn(false)
+                .Build(),
+
+                PlayerBuilder
+                .From(targetPlayer)
+                .SetCells(GridConverter.FromArrayToList(board.Grid))
+                .SetShips(new List<Ship>(board.Ships))
+                .SetGameStatus("IN_PROGRESS")
+                .SetIsYourTurn(true)
+                .Build()
+            };
+        }
+
+        private static int GetMaxShotsForShip(Ship ship)
+        {
+            return ship.HitPoints switch
+            {
+                1 => 1,
+                2 => 2,
+                3 => 2,
+                4 => 3,
+                5 => 3,
+                _ => throw new ArgumentOutOfRangeException(nameof(ship.HitPoints), $"Not expected hit points value: {ship.HitPoints}")
+            };
+        }
+
+        private static List<Player> HandleTurnEnd(Player attackerPlayer, Player targetPlayer, Board board)
+        {
+            shotsFired[attackerPlayer.Id] = 0;
             return new List<Player> {
                 PlayerBuilder
                 .From(attackerPlayer)

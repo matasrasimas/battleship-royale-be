@@ -4,6 +4,6 @@ namespace battleship_royale_be.DesignPatterns.Strategy
 {
     public interface IShootingStrategy
     {
-        void ExecuteShoot(ShotCoordinates coordinates);
+        void ExecuteShot(ShotCoordinates coordinates);
     }
 }
