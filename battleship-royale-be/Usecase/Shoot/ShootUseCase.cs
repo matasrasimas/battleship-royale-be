@@ -14,7 +14,7 @@ namespace battleship_royale_be.Usecase.Shoot
             _context = context;
         }
 
-        public async Task<Game?> Shoot(Guid id, ShotCoordinates shotCoords, string connectionId)
+        public async Task<Game?> Shoot(Guid id, ShotCoordinates shotCoords, string connectionId, int shotCount)
         {
             Game? gameToUpdate = await _context.Games
                 .Include(game => game.Players)
@@ -36,7 +36,7 @@ namespace battleship_royale_be.Usecase.Shoot
             if (attackerPlayer == null)
                 return null;
 
-            List<Player> playersAfterShot = ShotHandler.HandleShot(attackerPlayer, targetPlayer, shotCoords);
+            List<Player> playersAfterShot = ShotHandler.HandleShot(attackerPlayer, targetPlayer, shotCoords, shotCount);
             List<Player> updatedPlayersList = new List<Player>();
             foreach (Player player in playersAfterShot) {
                 updatedPlayersList.Add(PlayerBuilder.From(player).Build());

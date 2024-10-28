@@ -5,10 +5,10 @@ namespace battleship_royale_be.Usecase.StartNewGame
 {
     public static class ShipsListGenerator
     {
-        public static List<Ship> Generate()
+        public static List<Ship> Generate(int gameLevel)
         {
-            List<ShipType> shipTypes = CreateShipTypesList();
-            List<Ship> ships = ConvertShipTypesToShipObjects(shipTypes);
+            List<ShipType> shipTypes = CreateShipTypesList(gameLevel);
+            List<Ship> ships = ConvertShipTypesToShipObjects(shipTypes, gameLevel);
 
             Random rng = new Random();
             ships = ships.OrderBy(a => rng.Next()).ToList();
@@ -16,18 +16,27 @@ namespace battleship_royale_be.Usecase.StartNewGame
             return ships;
         }
 
-        private static List<ShipType> CreateShipTypesList()
+        private static List<ShipType> CreateShipTypesList(int gameLevel)
         {
-            return new List<ShipType>
-        {
-            ShipType.CARRIER, ShipType.CARRIER,
-            ShipType.BATTLESHIP, ShipType.BATTLESHIP,
-            ShipType.CRUISER,
-            ShipType.SUBMARINE,
-        };
+            return gameLevel == 1
+                ? new List<ShipType>
+                    {
+                        ShipType.CARRIER, ShipType.CARRIER,
+                        ShipType.BATTLESHIP, ShipType.BATTLESHIP,
+                        ShipType.CRUISER,
+                        ShipType.SUBMARINE,
+                    }
+                : new List<ShipType>
+                    {
+                        ShipType.CARRIER, ShipType.CARRIER, ShipType.CARRIER,
+                        ShipType.BATTLESHIP, ShipType.BATTLESHIP, ShipType.BATTLESHIP,
+                        ShipType.CRUISER, ShipType.CRUISER,
+                        ShipType.SUBMARINE,
+                        ShipType.DESTROYER,
+                    };
         }
 
-        private static List<Ship> ConvertShipTypesToShipObjects(List<ShipType> shipTypes)
+        private static List<Ship> ConvertShipTypesToShipObjects(List<ShipType> shipTypes, int gameLevel)
         {
             Random random = new Random();
             return shipTypes.Select(shipType =>
@@ -35,6 +44,7 @@ namespace battleship_royale_be.Usecase.StartNewGame
                     .DefaultValues()
                     .SetHitPoints(GetShipHitPointsByType(shipType))
                     .SetIsHorizontal(random.NextDouble() < 0.5)
+                    .SetCanMove(gameLevel == 2)
                     .Build()
             ).ToList();
         }

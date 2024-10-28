@@ -32,7 +32,7 @@
                 {
                     clonedCoordinates.Add(new Coordinates(Guid.NewGuid(), coords.Row, coords.Col));
                 }
-                clonedShips.Add(new Ship(Guid.NewGuid(), ship.HitPoints, ship.IsHorizontal, clonedCoordinates));
+                clonedShips.Add(new Ship(Guid.NewGuid(), ship.HitPoints, ship.IsHorizontal, ship.CanMove, clonedCoordinates));
             }
 
             var builder = new PlayerBuilder
@@ -97,7 +97,7 @@
                 {
                     clonedCoordinates.Add(new Coordinates(Guid.NewGuid(), coords.Row, coords.Col));
                 }
-                clonedShips.Add(new Ship(Guid.NewGuid(), ship.HitPoints, ship.IsHorizontal, clonedCoordinates));
+                clonedShips.Add(new Ship(Guid.NewGuid(), ship.HitPoints, ship.IsHorizontal, ship.CanMove, clonedCoordinates));
             }
             this.ships = clonedShips;
             return this;

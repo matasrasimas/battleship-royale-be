@@ -57,7 +57,7 @@ namespace battleship_royale_be.Hubs
                 return;
             }
 
-            var playerToAdd = _createNewPlayerUseCase.CreatePlayer(Context.ConnectionId);
+            var playerToAdd = _createNewPlayerUseCase.CreatePlayer(Context.ConnectionId, 1);
 
             Game gameAfterAddedPlayer = GameBuilder.From(gameToJoin).Build();
             gameAfterAddedPlayer.Players.Add(playerToAdd);
@@ -101,14 +101,13 @@ namespace battleship_royale_be.Hubs
                 .SendAsync("JoinSpecificGame", "admin", gameAfterAddedPlayer);
         }
 
-        public async Task MakeShot(ShotCoordinates shotCoords)
+        public async Task MakeShot(ShotCoordinates shotCoords, int shotCount)
         {
             var conn = await _context.UserConnections.Where(conn => conn.Id == Context.ConnectionId).FirstOrDefaultAsync();
             if (conn != null)
             {
-                Game gameAfterShot = await _shootUseCase.Shoot(Guid.Parse(conn.GameId), shotCoords, conn.Id);
+                Game gameAfterShot = await _shootUseCase.Shoot(Guid.Parse(conn.GameId), shotCoords, conn.Id, shotCount);
                 if (gameAfterShot != null) {
-                    //server.NotifyAll("Player " + conn.Id + " made a shot");
                     await Clients.Group(conn.GameId)
                         .SendAsync("ReceiveGameAfterShot", conn.Id, gameAfterShot);
                 }
@@ -124,6 +123,59 @@ namespace battleship_royale_be.Hubs
                 if (gameAfterSurrender != null)
                     await Clients.Group(conn.GameId)
                         .SendAsync("ReceiveGameAfterSurrender", conn.Id, gameAfterSurrender);
+            }
+        }
+
+        public async Task GoToNextLevel(UserConnection conn) {
+            var gameToUpdate = await _context.Games
+                .Include(game => game.Players)
+                    .ThenInclude(player => player.Cells)
+                .Include(game => game.Players)
+                    .ThenInclude(player => player.Ships)
+                       .ThenInclude(ship => ship.Coordinates)
+                .Where(g => g.Id.ToString().ToLower() == conn.GameId)
+                .FirstOrDefaultAsync();
+
+            if (gameToUpdate != null)
+            {
+                List<Player> nextLevelPlayers = new List<Player>();
+                foreach (Player player in gameToUpdate.Players)
+                {
+                    nextLevelPlayers.Add(_createNewPlayerUseCase.CreatePlayer(player.ConnectionId, 2));
+                }
+
+                Game gameWithUpdatedPlayers = GameBuilder.From(gameToUpdate).SetPlayers(nextLevelPlayers).Build();
+                Random random = new Random();
+                int randomIndex = random.Next(gameWithUpdatedPlayers.Players.Count);
+                Player randomPlayer = gameWithUpdatedPlayers.Players[randomIndex];
+                randomPlayer.IsYourTurn = true;
+
+                foreach (Player player in gameToUpdate.Players)
+                {
+                    foreach (Cell cell in player.Cells)
+                    {
+                        _context.Cells.Remove(cell);
+                    }
+                    foreach (Ship ship in player.Ships)
+                    {
+                        foreach (Coordinates coord in ship.Coordinates)
+                        {
+                            _context.Coordinates.Remove(coord);
+                        }
+                        _context.Ships.Remove(ship);
+                    }
+                    _context.Players.Remove(player);
+                }
+                _context.Games.Remove(gameToUpdate);
+
+                await _context.Games.AddAsync(gameWithUpdatedPlayers);
+
+                await _context.SaveChangesAsync();
+
+                await Groups.AddToGroupAsync(Context.ConnectionId, conn.GameId);
+
+                await Clients.Group(conn.GameId)
+                    .SendAsync("ReceiveGameAfterGoToNextLevel", "admin", gameWithUpdatedPlayers);
             }
         }
 
