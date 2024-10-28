@@ -1,4 +1,5 @@
-﻿using battleship_royale_be.Models.Builders;
+﻿using battleship_royale_be.DesignPatterns.Strategy;
+using battleship_royale_be.Models.Builders;
 using battleship_royale_be.Models;
 using battleship_royale_be.Models.Converters;
 
@@ -6,7 +7,10 @@ namespace battleship_royale_be.Usecase.Shoot
 {
     public static class ShotHandler
     {
-        public static List<Player> HandleShot(Player attackerPlayer, Player targetPlayer, ShotCoordinates targetCoords)
+        private static Dictionary<Guid, int> shotsFired = new Dictionary<Guid, int>();
+        private static IShotStrategy shotStrategy = new StandardShotStrategy();
+
+        public static List<Player> HandleShot(Player attackerPlayer, Player targetPlayer, ShotCoordinates targetCoords, int shotCount)
         {
             Cell[,] grid = GridConverter.FromListToArray(targetPlayer.Cells);
             Board board = new Board(
@@ -14,28 +18,53 @@ namespace battleship_royale_be.Usecase.Shoot
                 new List<Ship>(targetPlayer.Ships)
             );
 
+            if (!shotsFired.ContainsKey(attackerPlayer.Id))
+            {
+                shotsFired[attackerPlayer.Id] = 0;
+            }
+
             if (!board.CanShoot(new Coordinates(Guid.NewGuid(), targetCoords.Row, targetCoords.Col)) || !attackerPlayer.IsYourTurn)
             {
                 return new List<Player> {
-
-                    PlayerBuilder
-                    .From(attackerPlayer)
-                    .Build(),
-
-                    PlayerBuilder
-                    .From(targetPlayer)
-                    .Build()
+                    PlayerBuilder.From(attackerPlayer).Build(),
+                    PlayerBuilder.From(targetPlayer).Build()
                 };
             }
 
-            var gridAfterShot = MarkCellAsHit(board, targetCoords);
-            var newBoard = BoardBuilder
-                .From(board)
-                .SetGrid(gridAfterShot)
-                .SetShips(board.Ships)
-                .Build();
+            var attackingShip = attackerPlayer.Ships.FirstOrDefault(ship => ship.HitPoints > 0);
+            if (attackingShip == null)
+            {
+                throw new ApplicationException("No available ships to attack.");
+            }
 
-            return HandleShot(attackerPlayer, targetPlayer, targetCoords, newBoard);
+            return HandleActualShot(attackerPlayer, targetPlayer, targetCoords, board, shotCount);
+        }
+
+        private static List<Player> HandleActualShot(Player attackerPlayer, Player targetPlayer, ShotCoordinates targetCoords, Board board, int shotCount)
+        {
+            var cell = board.Grid[targetCoords.Row, targetCoords.Col];
+            bool isHit = cell.IsShip;
+
+            if (isHit)
+            {
+                var newGrid = MarkCellAsHit(board, targetCoords);
+                var newBoard = new Board(newGrid, new List<Ship>(board.Ships));
+
+                return HandleSuccessfulShot(attackerPlayer, targetPlayer, targetCoords, newBoard, shotCount);
+            }
+            else
+            {
+                shotsFired[attackerPlayer.Id]++;
+                int maxShots = shotStrategy.GetMaxShots(attackerPlayer.Ships.FirstOrDefault(ship => ship.HitPoints > 0));
+
+                if (shotsFired[attackerPlayer.Id] >= maxShots)
+                {
+                    Console.WriteLine($"Player {attackerPlayer.Id} has reached maximum shots. Ending turn.");
+                    return HandleTurnEnd(attackerPlayer, targetPlayer, board);
+                }
+
+                return HandleMissedShot(attackerPlayer, targetPlayer, board);
+            }
         }
 
         private static Cell[,] MarkCellAsHit(Board board, ShotCoordinates targetCoords)
@@ -47,20 +76,7 @@ namespace battleship_royale_be.Usecase.Shoot
             return newGrid;
         }
 
-        private static List<Player> HandleShot(Player attackerPlayer, Player targetPlayer, ShotCoordinates targetCoords, Board board)
-        {
-            var cell = board.Grid[targetCoords.Row, targetCoords.Col];
-            if (cell.IsShip)
-            {
-                return HandleSuccessfulShot(attackerPlayer, targetPlayer, targetCoords, board);
-            }
-            else
-            {
-                return HandleMissedShot(attackerPlayer, targetPlayer, board);
-            }
-        }
-
-        private static List<Player> HandleSuccessfulShot(Player attackerPlayer, Player targetPlayer, ShotCoordinates targetCoords, Board board)
+        private static List<Player> HandleSuccessfulShot(Player attackerPlayer, Player targetPlayer, ShotCoordinates targetCoords, Board board, int shotCount)
         {
             var targetShip = board.FindShipByCoordinates(targetCoords);
             if (targetShip == null)
@@ -68,9 +84,18 @@ namespace battleship_royale_be.Usecase.Shoot
                 throw new ApplicationException("This part of code should not be reachable");
             }
 
-            var boardAfterShot = targetShip.HitPoints - 1 <= 0
-                ? ShipDestructor.DestroyShip(board, targetShip)
-                : ShipDestructor.DamageShip(board, targetShip);
+            if (targetShip.HitPoints <= 0)
+            {
+                throw new ApplicationException("Cannot hit a destroyed ship.");
+            }
+
+            targetShip.HitPoints -= shotCount;
+
+            bool isDestroyed = targetShip.HitPoints <= 0;
+
+            var boardAfterShot = isDestroyed 
+                ? ShipDestructor.DestroyShip(board, targetShip) 
+                : board;
 
             bool isDefeated = !boardAfterShot.Ships.Any();
 
@@ -99,6 +124,25 @@ namespace battleship_royale_be.Usecase.Shoot
 
                 PlayerBuilder
                 .From(ShipsMover.MoveShips(targetPlayer, new List<Ship>(board.Ships), board.Grid))
+                .SetGameStatus("IN_PROGRESS")
+                .SetIsYourTurn(true)
+                .Build()
+            };
+        }
+
+        private static List<Player> HandleTurnEnd(Player attackerPlayer, Player targetPlayer, Board board)
+        {
+            shotsFired[attackerPlayer.Id] = 0;
+            return new List<Player> {
+                PlayerBuilder
+                .From(attackerPlayer)
+                .SetIsYourTurn(false)
+                .Build(),
+
+                PlayerBuilder
+                .From(targetPlayer)
+                .SetCells(GridConverter.FromArrayToList(board.Grid))
+                .SetShips(new List<Ship>(board.Ships))
                 .SetGameStatus("IN_PROGRESS")
                 .SetIsYourTurn(true)
                 .Build()

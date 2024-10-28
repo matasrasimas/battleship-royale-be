@@ -95,12 +95,12 @@ namespace battleship_royale_be.Hubs
                 .SendAsync("JoinSpecificGame", "admin", gameAfterAddedPlayer);
         }
 
-        public async Task MakeShot(ShotCoordinates shotCoords)
+        public async Task MakeShot(ShotCoordinates shotCoords, int shotCount)
         {
             var conn = await _context.UserConnections.Where(conn => conn.Id == Context.ConnectionId).FirstOrDefaultAsync();
             if (conn != null)
             {
-                Game gameAfterShot = await _shootUseCase.Shoot(Guid.Parse(conn.GameId), shotCoords, conn.Id);
+                Game gameAfterShot = await _shootUseCase.Shoot(Guid.Parse(conn.GameId), shotCoords, conn.Id, shotCount);
                 if (gameAfterShot != null)
                     await Clients.Group(conn.GameId)
                         .SendAsync("ReceiveGameAfterShot", conn.Id, gameAfterShot);
