@@ -9,10 +9,10 @@ namespace battleship_royale_be.Models
         public List<Ship> Ships { get; set; }
         public string GameStatus { get; set; }
         public bool IsYourTurn { get; set; }
-
+        public int Points { get; set; }
         public Player() { }
 
-        public Player(Guid Id, string ConnectionId, List<Cell> Cells, List<Ship> Ships, string GameStatus, bool IsYourTurn)
+        public Player(Guid Id, string ConnectionId, List<Cell> Cells, List<Ship> Ships, string GameStatus, bool IsYourTurn, int Points)
         {
             this.Id = Id;
             this.ConnectionId = ConnectionId;
@@ -20,6 +20,7 @@ namespace battleship_royale_be.Models
             this.Ships = Ships;
             this.GameStatus = GameStatus;
             this.IsYourTurn = IsYourTurn;
+            this.Points = Points;
         }
 
     }

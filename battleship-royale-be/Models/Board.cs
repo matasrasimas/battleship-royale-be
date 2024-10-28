@@ -11,6 +11,19 @@
             return ShotIsWithinGridBounds(coords) && !CellHasAlreadyBeenHit(coords) && !CellContainsIsland(coords);
         }
 
+        public int CanShootCellAmount()
+        {
+            int count = 0;
+            foreach (Cell cell in Grid)
+            {
+                if(cell.IsIsland || cell.IsHit)
+                {
+                    count++;
+                }
+            }
+            return count;
+        }
+
         public Ship? FindShipByCoordinates(ShotCoordinates targetCoords)
         {
             return Ships.FirstOrDefault(ship => ship.Coordinates.Any(coord => 

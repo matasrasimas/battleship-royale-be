@@ -8,6 +8,7 @@
         private List<Ship> ships;
         private string gameStatus;
         private bool isYourTurn;
+        private int points;
 
         private PlayerBuilder()
         {
@@ -43,6 +44,7 @@
                 ships = clonedShips,
                 gameStatus = player.GameStatus,
                 isYourTurn = player.IsYourTurn,
+                points = player.Points,
             };
             return builder;
         }
@@ -57,6 +59,7 @@
                 ships = new List<Ship>(),
                 gameStatus = "IN_PROGRESS",
                 isYourTurn = false,
+                points = 0,
             };
         }
 
@@ -115,9 +118,15 @@
             return this;
         }
 
+        public PlayerBuilder SetPoints(int points)
+        {
+            this.points = points;
+            return this;
+        }
+
         public Player Build()
         {
-            return new Player(id, connectionId, cells, ships, gameStatus, isYourTurn);
+            return new Player(id, connectionId, cells, ships, gameStatus, isYourTurn, points);
         }
     }
 }
