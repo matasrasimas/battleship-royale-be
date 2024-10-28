@@ -1,6 +1,7 @@
 ﻿using battleship_royale_be.Data;
 using battleship_royale_be.Models;
 using battleship_royale_be.Models.Builders;
+using battleship_royale_be.Models.Observer;
 using battleship_royale_be.Usecase.CreateNewGame;
 using battleship_royale_be.Usecase.GetGameById;
 using battleship_royale_be.Usecase.Shoot;
@@ -20,6 +21,8 @@ namespace battleship_royale_be.Hubs
         private readonly IAddPlayerToGameUseCase _addPlayerToGameUseCase;
         private readonly ISurrenderUseCase _surrenderUseCase;
 
+        private Subject server;
+
         public GameHub(BattleshipAPIContext context,
             ICreateNewPlayerUseCase createNewPlayerUseCase,
             IGetGameByIdUseCase getGameByIdUseCase,
@@ -33,6 +36,7 @@ namespace battleship_royale_be.Hubs
             _shootUseCase = shootUseCase;
             _addPlayerToGameUseCase = addPlayerToGameUseCase;
             _surrenderUseCase = surrenderUseCase;
+            server = new Server();
         }
 
         public async Task JoinSpecificGame(UserConnection conn)
@@ -57,7 +61,9 @@ namespace battleship_royale_be.Hubs
 
             Game gameAfterAddedPlayer = GameBuilder.From(gameToJoin).Build();
             gameAfterAddedPlayer.Players.Add(playerToAdd);
-
+            server.Attach(playerToAdd);
+            server.NotifyAll("Player " + Context.ConnectionId + " joined the game");
+            
             if (gameAfterAddedPlayer.Players.Count >= 2)
             {
                 Random random = new Random();
@@ -101,10 +107,10 @@ namespace battleship_royale_be.Hubs
             if (conn != null)
             {
                 Game gameAfterShot = await _shootUseCase.Shoot(Guid.Parse(conn.GameId), shotCoords, conn.Id, shotCount);
-                if (gameAfterShot != null)
+                if (gameAfterShot != null) {
                     await Clients.Group(conn.GameId)
                         .SendAsync("ReceiveGameAfterShot", conn.Id, gameAfterShot);
-
+                }
             }
         }
 
@@ -170,6 +176,21 @@ namespace battleship_royale_be.Hubs
 
                 await Clients.Group(conn.GameId)
                     .SendAsync("ReceiveGameAfterGoToNextLevel", "admin", gameWithUpdatedPlayers);
+            }
+        }
+
+        public async Task SendMessage(string message)
+        {
+            var conn = await _context.UserConnections.Where(conn => conn.Id == Context.ConnectionId).FirstOrDefaultAsync();
+            if (conn != null)
+            {
+                var player = _context.Players.Where(player => player.ConnectionId == conn.Id).FirstOrDefault();
+                if (player != null)
+                {
+                    var playerIndex = _context.Players.ToList().IndexOf(player);
+                    await Clients.Group(conn.GameId)
+                        .SendAsync("ReceiveMessage", "Player " + playerIndex, message);
+                }
             }
         }
 

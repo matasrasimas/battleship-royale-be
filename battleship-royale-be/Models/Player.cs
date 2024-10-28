@@ -1,7 +1,7 @@
 ﻿
 namespace battleship_royale_be.Models
 {
-    public class Player
+    public class Player : Observer.IObserver
     {
         public Guid Id { get; set; }
         public string ConnectionId { get; set; }
@@ -22,5 +22,9 @@ namespace battleship_royale_be.Models
             this.IsYourTurn = IsYourTurn;
         }
 
+        public void Update(string msg)
+        {
+            Console.WriteLine(msg);
+        }
     }
 }
