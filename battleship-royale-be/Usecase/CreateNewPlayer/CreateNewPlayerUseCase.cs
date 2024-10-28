@@ -29,7 +29,8 @@ namespace battleship_royale_be.Usecase.StartNewGame
                 cells,
                 board.Ships,
                 "IN_PROGRESS",
-                false
+                false,
+                0
             );
 
             return player;

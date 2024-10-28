@@ -2,6 +2,8 @@
 using battleship_royale_be.Models.Builders;
 using battleship_royale_be.Models;
 using battleship_royale_be.Models.Converters;
+using battleship_royale_be.DesignPatterns.Decorator;
+using battleship_royale_be.DesignPatterns.Decorator.ShotPointsChangers;
 
 namespace battleship_royale_be.Usecase.Shoot
 {
@@ -78,6 +80,9 @@ namespace battleship_royale_be.Usecase.Shoot
 
         private static List<Player> HandleSuccessfulShot(Player attackerPlayer, Player targetPlayer, ShotCoordinates targetCoords, Board board, int shotCount)
         {
+            PointsCalculator pointsCalculator = new PointsCalculator();
+            ShotSizePoints shotSizePoints = new ShotSizePoints(pointsCalculator, shotCount);
+            NotShotCellAmountPoints notShotCellAmountPoints = new NotShotCellAmountPoints(shotSizePoints, board.CanShootCellAmount());
             var targetShip = board.FindShipByCoordinates(targetCoords);
             if (targetShip == null)
             {
@@ -93,6 +98,17 @@ namespace battleship_royale_be.Usecase.Shoot
 
             bool isDestroyed = targetShip.HitPoints <= 0;
 
+            int calculatedPoints;
+            if (isDestroyed)
+            {
+                HitShipSankAddPoints hitShipSankAddPoints = new HitShipSankAddPoints(notShotCellAmountPoints, 200);
+                calculatedPoints = hitShipSankAddPoints.CalculateShotPoints();
+            }
+            else
+            {
+                calculatedPoints = notShotCellAmountPoints.CalculateShotPoints();
+            }
+
             var boardAfterShot = isDestroyed 
                 ? ShipDestructor.DestroyShip(board, targetShip) 
                 : board;
@@ -103,6 +119,7 @@ namespace battleship_royale_be.Usecase.Shoot
                 PlayerBuilder
                 .From(attackerPlayer)
                 .SetGameStatus(isDefeated ? "WON" : "IN_PROGRESS")
+                .SetPoints(attackerPlayer.Points + calculatedPoints)
                 .Build(),
 
                 PlayerBuilder
