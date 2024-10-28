@@ -1,6 +1,6 @@
 ﻿namespace battleship_royale_be.Models
 {
-    public class Coordinates
+    public class Coordinates : ICloneable
     {
         public Guid Id { get; set; }
         public int Row { get; set; }
@@ -11,6 +11,11 @@
             this.Id = Id;
             this.Row = Row;
             this.Col = Col;
+        }
+
+        public object Clone()
+        {
+            return (Coordinates)this.MemberwiseClone();
         }
     }
 }

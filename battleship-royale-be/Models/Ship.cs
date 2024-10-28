@@ -1,6 +1,6 @@
 ﻿namespace battleship_royale_be.Models
 {
-    public class Ship
+    public class Ship : ICloneable
     {
         public Guid Id { get; set; }
         public int HitPoints { get; set; }
@@ -41,6 +41,24 @@
         private int CalculateShipEndRow(Coordinates startCoords)
         {
             return IsHorizontal ? startCoords.Row : startCoords.Row + HitPoints - 1;
+        }
+
+        public object ShallowClone()
+        {
+            return (Ship)this.MemberwiseClone();
+        }
+
+        public object Clone()
+        {
+            Ship clone = (Ship) this.MemberwiseClone();
+            Console.WriteLine("Current ship " + this.GetHashCode());
+            Console.WriteLine("Current ship coordinates " + this.Coordinates.GetHashCode());
+            Console.WriteLine("Cloned ship shallow " + clone.GetHashCode());
+            Console.WriteLine("Cloned ship coordinates with shallow " + clone.Coordinates.GetHashCode());
+            clone.Coordinates = this.Coordinates.Select(item => (Coordinates)item.Clone()).ToList();
+            Console.WriteLine("Cloned ship deep " + clone.GetHashCode());
+            Console.WriteLine("Cloned ship coordinates with deep " + clone.Coordinates.GetHashCode());
+            return clone;
         }
     }
 }
