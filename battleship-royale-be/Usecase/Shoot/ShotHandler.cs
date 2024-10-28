@@ -8,9 +8,9 @@ namespace battleship_royale_be.Usecase.Shoot
     public static class ShotHandler
     {
         private static Dictionary<Guid, int> shotsFired = new Dictionary<Guid, int>();
-        private static IShotStrategy shotStrategy = new StandardShotStrategy(); 
+        private static IShotStrategy shotStrategy = new StandardShotStrategy();
 
-        public static List<Player> HandleShot(Player attackerPlayer, Player targetPlayer, ShotCoordinates targetCoords)
+        public static List<Player> HandleShot(Player attackerPlayer, Player targetPlayer, ShotCoordinates targetCoords, int shotCount)
         {
             Cell[,] grid = GridConverter.FromListToArray(targetPlayer.Cells);
             Board board = new Board(
@@ -31,25 +31,26 @@ namespace battleship_royale_be.Usecase.Shoot
                 };
             }
 
-            // Get the attacking ship's max damage using the strategy
             var attackingShip = attackerPlayer.Ships.FirstOrDefault(ship => ship.HitPoints > 0);
-            int shotPower = shotStrategy.GetMaxShots(attackingShip);
+            if (attackingShip == null)
+            {
+                throw new ApplicationException("No available ships to attack.");
+            }
 
-            return HandleActualShot(attackerPlayer, targetPlayer, targetCoords, board, shotPower);
+            return HandleActualShot(attackerPlayer, targetPlayer, targetCoords, board, shotCount);
         }
 
-        private static List<Player> HandleActualShot(Player attackerPlayer, Player targetPlayer, ShotCoordinates targetCoords, Board board, int shotPower)
+        private static List<Player> HandleActualShot(Player attackerPlayer, Player targetPlayer, ShotCoordinates targetCoords, Board board, int shotCount)
         {
             var cell = board.Grid[targetCoords.Row, targetCoords.Col];
             bool isHit = cell.IsShip;
 
             if (isHit)
             {
-                // Mark the cell as hit on the board
                 var newGrid = MarkCellAsHit(board, targetCoords);
-                var newBoard = new Board(newGrid, new List<Ship>(board.Ships)); // Create a new board instance with the updated grid
+                var newBoard = new Board(newGrid, new List<Ship>(board.Ships));
 
-                return HandleSuccessfulShot(attackerPlayer, targetPlayer, targetCoords, newBoard, shotPower);
+                return HandleSuccessfulShot(attackerPlayer, targetPlayer, targetCoords, newBoard, shotCount);
             }
             else
             {
@@ -75,7 +76,7 @@ namespace battleship_royale_be.Usecase.Shoot
             return newGrid;
         }
 
-        private static List<Player> HandleSuccessfulShot(Player attackerPlayer, Player targetPlayer, ShotCoordinates targetCoords, Board board, int shotPower)
+        private static List<Player> HandleSuccessfulShot(Player attackerPlayer, Player targetPlayer, ShotCoordinates targetCoords, Board board, int shotCount)
         {
             var targetShip = board.FindShipByCoordinates(targetCoords);
             if (targetShip == null)
@@ -83,59 +84,34 @@ namespace battleship_royale_be.Usecase.Shoot
                 throw new ApplicationException("This part of code should not be reachable");
             }
 
-            // Check if the shot power exceeds the ship's hit points
             if (targetShip.HitPoints <= 0)
             {
                 throw new ApplicationException("Cannot hit a destroyed ship.");
             }
 
-            // Logic for immediate destruction of ships with 1 or 2 hit points
-            if (targetShip.HitPoints <= 2)
-            {
-                // Immediately destroy the ship
-                var boardAfterShot = ShipDestructor.DestroyShip(board, targetShip);
-                bool isDefeated = !boardAfterShot.Ships.Any();
+            targetShip.HitPoints -= shotCount;
 
-                return new List<Player> {
-                    PlayerBuilder
-                    .From(attackerPlayer)
-                    .SetGameStatus(isDefeated ? "WON" : "IN_PROGRESS")
-                    .Build(),
+            bool isDestroyed = targetShip.HitPoints <= 0;
 
-                    PlayerBuilder
-                    .From(targetPlayer)
-                    .SetCells(GridConverter.FromArrayToList(boardAfterShot.Grid))
-                    .SetShips(new List<Ship>(boardAfterShot.Ships))
-                    .SetGameStatus(isDefeated ? "LOST" : "IN_PROGRESS")
-                    .Build()
-                };
-            }
-            else
-            {
-                // Damage the ship
-                targetShip.HitPoints -= shotPower;
+            var boardAfterShot = isDestroyed 
+                ? ShipDestructor.DestroyShip(board, targetShip) 
+                : board;
 
-                // Check if the ship should be destroyed after the hit
-                var boardAfterShot = targetShip.HitPoints <= 0
-                    ? ShipDestructor.DestroyShip(board, targetShip)
-                    : board;
+            bool isDefeated = !boardAfterShot.Ships.Any();
 
-                bool isDefeated = !boardAfterShot.Ships.Any();
+            return new List<Player> {
+                PlayerBuilder
+                .From(attackerPlayer)
+                .SetGameStatus(isDefeated ? "WON" : "IN_PROGRESS")
+                .Build(),
 
-                return new List<Player> {
-                    PlayerBuilder
-                    .From(attackerPlayer)
-                    .SetGameStatus(isDefeated ? "WON" : "IN_PROGRESS")
-                    .Build(),
-
-                    PlayerBuilder
-                    .From(targetPlayer)
-                    .SetCells(GridConverter.FromArrayToList(boardAfterShot.Grid))
-                    .SetShips(new List<Ship>(boardAfterShot.Ships))
-                    .SetGameStatus(isDefeated ? "LOST" : "IN_PROGRESS")
-                    .Build()
-                };
-            }
+                PlayerBuilder
+                .From(targetPlayer)
+                .SetCells(GridConverter.FromArrayToList(boardAfterShot.Grid))
+                .SetShips(new List<Ship>(boardAfterShot.Ships))
+                .SetGameStatus(isDefeated ? "LOST" : "IN_PROGRESS")
+                .Build()
+            };
         }
 
         private static List<Player> HandleMissedShot(Player attackerPlayer, Player targetPlayer, Board board)
