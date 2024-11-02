@@ -26,6 +26,7 @@ namespace battleship_royale_be.Hubs
         private readonly IPauseUseCase _pauseUseCase;
 
         private CommandController _commandController;
+        private Subject _server;
 
         public GameHub(BattleshipAPIContext context,
             ICreateNewPlayerUseCase createNewPlayerUseCase,
@@ -34,7 +35,8 @@ namespace battleship_royale_be.Hubs
             IAddPlayerToGameUseCase addPlayerToGameUseCase,
             ISurrenderUseCase surrenderUseCase,
             IPauseUseCase pauseUseCase,
-            CommandController commandController)
+            CommandController commandController,
+            Subject server)
         {
             _context = context;
             _createNewPlayerUseCase = createNewPlayerUseCase;
@@ -44,6 +46,7 @@ namespace battleship_royale_be.Hubs
             _surrenderUseCase = surrenderUseCase;
             _pauseUseCase = pauseUseCase;
             _commandController = commandController;
+            _server = server;
         }
 
         public async Task JoinSpecificGame(UserConnection conn)
@@ -68,8 +71,8 @@ namespace battleship_royale_be.Hubs
 
             Game gameAfterAddedPlayer = GameBuilder.From(gameToJoin).Build();
             gameAfterAddedPlayer.Players.Add(playerToAdd);
-            //_context.Server.Attach(playerToAdd);
-            //_context.Server.NotifyAll("Player " + Context.ConnectionId + " joined the game");
+            _server.Attach(playerToAdd);
+            _server.NotifyAll("Player " + Context.ConnectionId + " joined the game");
 
             if (gameAfterAddedPlayer.Players.Count >= 2)
             {
@@ -117,6 +120,7 @@ namespace battleship_royale_be.Hubs
                 Game gameAfterShot = await _commandController.Run(new ShootCommand(_shootUseCase, Guid.Parse(conn.GameId), shotCoords, conn.Id, shotCount));
                 if (gameAfterShot != null)
                 {
+                    _server.NotifyAll("Player " + Context.ConnectionId + " made a shot at " + (shotCoords.Row + 1) + " " + (shotCoords.Col + 1));
                     await Clients.Group(conn.GameId)
                         .SendAsync("ReceiveGameAfterShot", conn.Id, gameAfterShot);
                 }
