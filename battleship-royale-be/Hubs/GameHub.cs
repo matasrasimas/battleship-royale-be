@@ -6,6 +6,7 @@ using battleship_royale_be.Models.Command;
 using battleship_royale_be.Models.Observer;
 using battleship_royale_be.Usecase.CreateNewGame;
 using battleship_royale_be.Usecase.GetGameById;
+using battleship_royale_be.Usecase.Pause;
 using battleship_royale_be.Usecase.Shoot;
 using battleship_royale_be.Usecase.StartNewGame;
 using battleship_royale_be.Usecase.Surrender;
@@ -22,6 +23,7 @@ namespace battleship_royale_be.Hubs
         private readonly IShootUseCase _shootUseCase;
         private readonly IAddPlayerToGameUseCase _addPlayerToGameUseCase;
         private readonly ISurrenderUseCase _surrenderUseCase;
+        private readonly IPauseUseCase _pauseUseCase;
 
         private CommandController _commandController;
 
@@ -31,6 +33,7 @@ namespace battleship_royale_be.Hubs
             IShootUseCase shootUseCase,
             IAddPlayerToGameUseCase addPlayerToGameUseCase,
             ISurrenderUseCase surrenderUseCase,
+            IPauseUseCase pauseUseCase,
             CommandController commandController)
         {
             _context = context;
@@ -39,6 +42,7 @@ namespace battleship_royale_be.Hubs
             _shootUseCase = shootUseCase;
             _addPlayerToGameUseCase = addPlayerToGameUseCase;
             _surrenderUseCase = surrenderUseCase;
+            _pauseUseCase = pauseUseCase;
             _commandController = commandController;
         }
 
@@ -220,6 +224,14 @@ namespace battleship_royale_be.Hubs
                                     //    .SendAsync("ReceiveMessage", "System", "You made a shot at " + (shotCoords.Row + 1) + " " + (shotCoords.Col + 1));
                                 }
                                 break;
+                            case "/pause":
+                                Game gameAfterPause = await _commandController.Run(new PauseCommand(_pauseUseCase, Guid.Parse(conn.GameId), conn.Id));
+                                if (gameAfterPause != null)
+                                {
+                                    await Clients.Group(conn.GameId)
+                                        .SendAsync("ReceiveGameAfterCommand", gameAfterPause);
+                                }
+                                break;
                             case "/undo":
                                 Game backup = await _commandController.Undo(_context, conn.Id);
                                                             
@@ -231,7 +243,7 @@ namespace battleship_royale_be.Hubs
                                 else
                                 {
                                     await Clients.Group(conn.GameId)
-                                        .SendAsync("ReceiveGameAfterShot", conn.Id, backup);
+                                        .SendAsync("ReceiveGameAfterCommand", backup);
                                 }
                                 break;
                             default:
