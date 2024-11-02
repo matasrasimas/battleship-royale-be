@@ -7,6 +7,7 @@ using battleship_royale_be.Hubs;
 using battleship_royale_be.Usecase.CreateNewGame;
 using battleship_royale_be.Usecase.FindGameUseCase;
 using battleship_royale_be.Usecase.Surrender;
+using battleship_royale_be.Models.Command;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -26,7 +27,10 @@ builder.Services.AddScoped<IShootUseCase, ShootUseCase>();
 builder.Services.AddScoped<IAddPlayerToGameUseCase, AddPlayerToGameUseCase>();
 builder.Services.AddScoped<IFindGameUseCase, FindGameUseCase>();
 builder.Services.AddScoped<ISurrenderUseCase, SurrenderUseCase>();
-builder.Services.AddSignalR();
+builder.Services.AddSingleton<CommandController>();
+builder.Services.AddSignalR(o => {
+    o.EnableDetailedErrors = true;
+});
 
 var app = builder.Build();
 

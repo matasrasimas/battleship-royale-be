@@ -9,9 +9,16 @@ namespace battleship_royale_be.Usecase.Shoot
     {
         private readonly BattleshipAPIContext _context;
 
+        private Game _backup;
+
         public ShootUseCase(BattleshipAPIContext context)
         {
             _context = context;
+        }
+
+        public Game GetBackup()
+        {
+            return _backup;
         }
 
         public async Task<Game?> Shoot(Guid id, ShotCoordinates shotCoords, string connectionId, int shotCount)
@@ -28,6 +35,8 @@ namespace battleship_royale_be.Usecase.Shoot
             if (gameToUpdate == null)
                 return null;
 
+            _backup = GameBuilder.From(gameToUpdate).SetPlayers(gameToUpdate.Players).Build();
+            
             Player? targetPlayer = gameToUpdate.Players.Where(player => player.ConnectionId != connectionId).FirstOrDefault();
             if (targetPlayer == null)
                 return null;

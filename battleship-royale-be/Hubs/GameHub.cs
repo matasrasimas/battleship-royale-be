@@ -1,6 +1,8 @@
-﻿using battleship_royale_be.Data;
+﻿using System.Text.RegularExpressions;
+using battleship_royale_be.Data;
 using battleship_royale_be.Models;
 using battleship_royale_be.Models.Builders;
+using battleship_royale_be.Models.Command;
 using battleship_royale_be.Models.Observer;
 using battleship_royale_be.Usecase.CreateNewGame;
 using battleship_royale_be.Usecase.GetGameById;
@@ -12,7 +14,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace battleship_royale_be.Hubs
 {
-    public class GameHub : Hub
+    public partial class GameHub : Hub
     {
         private readonly BattleshipAPIContext _context;
         private readonly ICreateNewPlayerUseCase _createNewPlayerUseCase;
@@ -21,14 +23,15 @@ namespace battleship_royale_be.Hubs
         private readonly IAddPlayerToGameUseCase _addPlayerToGameUseCase;
         private readonly ISurrenderUseCase _surrenderUseCase;
 
-        private Subject server;
+        private CommandController _commandController;
 
         public GameHub(BattleshipAPIContext context,
             ICreateNewPlayerUseCase createNewPlayerUseCase,
             IGetGameByIdUseCase getGameByIdUseCase,
             IShootUseCase shootUseCase,
             IAddPlayerToGameUseCase addPlayerToGameUseCase,
-            ISurrenderUseCase surrenderUseCase)
+            ISurrenderUseCase surrenderUseCase,
+            CommandController commandController)
         {
             _context = context;
             _createNewPlayerUseCase = createNewPlayerUseCase;
@@ -36,7 +39,7 @@ namespace battleship_royale_be.Hubs
             _shootUseCase = shootUseCase;
             _addPlayerToGameUseCase = addPlayerToGameUseCase;
             _surrenderUseCase = surrenderUseCase;
-            server = new Server();
+            _commandController = commandController;
         }
 
         public async Task JoinSpecificGame(UserConnection conn)
@@ -61,9 +64,9 @@ namespace battleship_royale_be.Hubs
 
             Game gameAfterAddedPlayer = GameBuilder.From(gameToJoin).Build();
             gameAfterAddedPlayer.Players.Add(playerToAdd);
-            server.Attach(playerToAdd);
-            server.NotifyAll("Player " + Context.ConnectionId + " joined the game");
-            
+            //_context.Server.Attach(playerToAdd);
+            //_context.Server.NotifyAll("Player " + Context.ConnectionId + " joined the game");
+
             if (gameAfterAddedPlayer.Players.Count >= 2)
             {
                 Random random = new Random();
@@ -106,8 +109,10 @@ namespace battleship_royale_be.Hubs
             var conn = await _context.UserConnections.Where(conn => conn.Id == Context.ConnectionId).FirstOrDefaultAsync();
             if (conn != null)
             {
-                Game gameAfterShot = await _shootUseCase.Shoot(Guid.Parse(conn.GameId), shotCoords, conn.Id, shotCount);
-                if (gameAfterShot != null) {
+                //Game gameAfterShot = await _shootUseCase.Shoot(Guid.Parse(conn.GameId), shotCoords, conn.Id, shotCount);
+                Game gameAfterShot = await _commandController.Run(new ShootCommand(_shootUseCase, Guid.Parse(conn.GameId), shotCoords, conn.Id, shotCount));
+                if (gameAfterShot != null)
+                {
                     await Clients.Group(conn.GameId)
                         .SendAsync("ReceiveGameAfterShot", conn.Id, gameAfterShot);
                 }
@@ -126,7 +131,8 @@ namespace battleship_royale_be.Hubs
             }
         }
 
-        public async Task GoToNextLevel(UserConnection conn) {
+        public async Task GoToNextLevel(UserConnection conn)
+        {
             var gameToUpdate = await _context.Games
                 .Include(game => game.Players)
                     .ThenInclude(player => player.Cells)
@@ -188,8 +194,57 @@ namespace battleship_royale_be.Hubs
                 if (player != null)
                 {
                     var playerIndex = _context.Players.ToList().IndexOf(player);
-                    await Clients.Group(conn.GameId)
-                        .SendAsync("ReceiveMessage", "Player " + playerIndex, message);
+                    if (message.StartsWith('/'))
+                    {
+                        switch (message)
+                        {
+                            case "/surrender":
+                                await HandleSurrender();
+                                break;
+                            case var str when MyRegex().IsMatch(str):
+                                var shotCoords = new ShotCoordinates(
+                                    int.Parse(message.Split(' ')[1]) - 1,
+                                    int.Parse(message.Split(' ')[2]) - 1
+                                );
+                                if (!player.IsYourTurn)
+                                {
+                                    await Clients.Caller
+                                        .SendAsync("ReceiveMessage", "System", "Cannot shoot: It's not your turn");
+                                    return;
+                                }
+                                else
+                                {
+                                    // TODO : add check for valid coordinates
+                                    await MakeShot(shotCoords, 1);
+                                    //await Clients.Caller
+                                    //    .SendAsync("ReceiveMessage", "System", "You made a shot at " + (shotCoords.Row + 1) + " " + (shotCoords.Col + 1));
+                                }
+                                break;
+                            case "/undo":
+                                Game backup = await _commandController.Undo(_context, conn.Id);
+                                                            
+                                if (backup == null)
+                                {
+                                    await Clients.Caller
+                                        .SendAsync("ReceiveMessage", "System", "Cannot undo");                                    
+                                }
+                                else
+                                {
+                                    await Clients.Group(conn.GameId)
+                                        .SendAsync("ReceiveGameAfterShot", conn.Id, backup);
+                                }
+                                break;
+                            default:
+                                await Clients.Caller
+                                    .SendAsync("ReceiveMessage", "System", "Command not found");
+                                break;
+                        }
+                    }
+                    else
+                    {
+                        await Clients.Group(conn.GameId)
+                            .SendAsync("ReceiveMessage", "Player " + playerIndex, message);
+                    }
                 }
             }
         }
@@ -217,5 +272,7 @@ namespace battleship_royale_be.Hubs
             await Clients.Caller
                 .SendAsync("GetYourConnectionId", Context.ConnectionId, Context.ConnectionId);
         }
+        [GeneratedRegex(@"^/shoot \d+ \d+$")]
+        private static partial Regex MyRegex();
     }
 }
