@@ -4,6 +4,6 @@ namespace battleship_royale_be.DesignPatterns.Strategy
 {
     public interface IShotStrategy
     {
-        int GetMaxShots(Ship ship);
+        int GetDamage(Ship ship);
     }
 }

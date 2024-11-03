@@ -10,7 +10,17 @@ namespace battleship_royale_be.Usecase.Shoot
     public static class ShotHandler
     {
         private static Dictionary<Guid, int> shotsFired = new Dictionary<Guid, int>();
-        private static IShotStrategy shotStrategy = new StandardShotStrategy();
+
+        private static IShotStrategy GetShotStrategy(int shotCount)
+        {
+            return shotCount switch
+            {
+                1 => new SingleShotStrategy(),
+                2 => new DoubleShotStrategy(),
+                3 => new TripleShotStrategy(),
+                _ => throw new ArgumentException("Invalid shot count")
+            };
+        }
 
         public static List<Player> HandleShot(Player attackerPlayer, Player targetPlayer, ShotCoordinates targetCoords, int shotCount)
         {
@@ -47,6 +57,8 @@ namespace battleship_royale_be.Usecase.Shoot
             var cell = board.Grid[targetCoords.Row, targetCoords.Col];
             bool isShip = cell.IsShip;
 
+            var attackingShip = attackerPlayer.Ships.FirstOrDefault(ship => ship.HitPoints > 0);
+
             if (isShip)
             {
                 var newGrid = MarkCellAsHit(board, targetCoords);
@@ -59,7 +71,8 @@ namespace battleship_royale_be.Usecase.Shoot
                 var newGrid = MarkCellAsHit(board, targetCoords);
                 var newBoard = new Board(newGrid, new List<Ship>(board.Ships));
                 shotsFired[attackerPlayer.Id]++;
-                int maxShots = shotStrategy.GetMaxShots(attackerPlayer.Ships.FirstOrDefault(ship => ship.HitPoints > 0));
+
+                int maxShots = GetShotStrategy(shotsFired[attackerPlayer.Id]).GetDamage(attackingShip);
 
                 if (shotsFired[attackerPlayer.Id] >= maxShots)
                 {
@@ -70,6 +83,7 @@ namespace battleship_royale_be.Usecase.Shoot
                 return HandleMissedShot(attackerPlayer, targetPlayer, newBoard);
             }
         }
+
 
         private static Cell[,] MarkCellAsHit(Board board, ShotCoordinates targetCoords)
         {
@@ -111,8 +125,8 @@ namespace battleship_royale_be.Usecase.Shoot
                 calculatedPoints = notShotCellAmountPoints.CalculateShotPoints();
             }
 
-            var boardAfterShot = isDestroyed 
-                ? ShipDestructor.DestroyShip(board, targetShip) 
+            var boardAfterShot = isDestroyed
+                ? ShipDestructor.DestroyShip(board, targetShip)
                 : board;
 
             bool isDefeated = !boardAfterShot.Ships.Any();
