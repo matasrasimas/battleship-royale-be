@@ -12,7 +12,6 @@
         public override int CalculateShotPoints()
         {
             int calculatedShotPoints = base.CalculateShotPoints();
-            //TODO better algo
             return calculatedShotPoints - _number * 15;
         }
     }

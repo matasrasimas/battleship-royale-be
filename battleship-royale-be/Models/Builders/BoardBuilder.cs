@@ -31,7 +31,7 @@ namespace battleship_royale_be.Models.Builders
 
         public BoardBuilder SetShips(List<Ship> ships)
         {
-            this.ships = new List<Ship>(ships);
+            this.ships = ships.Select(item => (Ship)item.Clone()).ToList();
             return this;
         }
 
