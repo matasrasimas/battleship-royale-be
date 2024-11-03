@@ -12,17 +12,19 @@ namespace battleship_royale_be.Usecase.StartNewGame
                 ? BoardBuilder.BuildLevel1Board()
                 : BoardBuilder.BuildLevel2Board();
 
+            int shipsLimit = gameLevel == 2 ? 10 : 6;
+
             List<Ship> ships = ShipsListGenerator.Generate(gameLevel);
             foreach (Ship ship in ships)
             {
-                board = PlaceShipRandomly(board, ship, gameLevel);
+                board = PlaceShipRandomly(board, ship, gameLevel, shipsLimit);
             }
             return board;
         }
 
-        private static Board PlaceShipRandomly(Board board, Ship ship, int gameLevel)
+        private static Board PlaceShipRandomly(Board board, Ship ship, int gameLevel, int shipsLimit)
         {
-            if (board.Ships.Count == 6)
+            if (board.Ships.Count == shipsLimit)
                 return board;
 
             int maxAttempts = 1000;
@@ -34,7 +36,7 @@ namespace battleship_royale_be.Usecase.StartNewGame
             int attempts = 0;
             while (attempts < maxAttempts)
             {
-                Coordinates randomCoordinates = CoordinatesGenerator.GenerateCoordinatesRandomly(10);
+                Coordinates randomCoordinates = CoordinatesGenerator.GenerateCoordinatesRandomly(gameLevel == 2 ? 15 : 10);
                 if (ShipPlacementValidator.CanPlaceShip(board.Grid, ship, randomCoordinates))
                     return PlaceShip(board, ship, randomCoordinates);
                 attempts++;

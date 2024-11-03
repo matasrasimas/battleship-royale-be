@@ -6,6 +6,11 @@ using battleship_royale_be.Models;
 using battleship_royale_be.Usecase.Shoot;
 using battleship_royale_be.Usecase.CreateNewGame;
 using battleship_royale_be.Usecase.FindGameUseCase;
+using battleship_royale_be.DesignPatterns.Facade;
+using battleship_royale_be.Models.Command;
+using battleship_royale_be.Models.Observer;
+using battleship_royale_be.Usecase.Pause;
+using battleship_royale_be.Usecase.Surrender;
 
 namespace battleship_royale_be.Controllers
 {
@@ -13,41 +18,44 @@ namespace battleship_royale_be.Controllers
     [ApiController]
     public class GamesController : Controller
     {
-        private readonly BattleshipAPIContext _context;
-        private readonly IFindGameUseCase _findGameUseCase;
-        private readonly IAddPlayerToGameUseCase _addPlayerToGameUseCase;
-        private readonly IGetGameByIdUseCase _getGameByIdUseCase;
-        private readonly IShootUseCase _shootUseCase;
+        private GameFacade _gameFacade;
 
         public GamesController(BattleshipAPIContext context,
-            IFindGameUseCase findGameUseCase,
-            IAddPlayerToGameUseCase addPlayerToGameUseCase,
+            ICreateNewPlayerUseCase createNewPlayerUseCase,
             IGetGameByIdUseCase getGameByIdUseCase,
-            IShootUseCase shootUseCase)
+            IShootUseCase shootUseCase,
+            IAddPlayerToGameUseCase addPlayerToGameUseCase,
+            ISurrenderUseCase surrenderUseCase,
+            IPauseUseCase pauseUseCase,
+            IFindGameUseCase findGameUseCase,
+            CommandController commandController,
+            Subject server)
         {
-            _context = context;
-            _findGameUseCase = findGameUseCase;
-            _addPlayerToGameUseCase = addPlayerToGameUseCase;
-            _getGameByIdUseCase = getGameByIdUseCase;
-            _shootUseCase = shootUseCase;
+            _gameFacade = new GameFacade(context,
+                            createNewPlayerUseCase,
+                            getGameByIdUseCase,
+                            shootUseCase,
+                            addPlayerToGameUseCase,
+                            surrenderUseCase,
+                            pauseUseCase,
+                            findGameUseCase,
+                            commandController,
+                            server);
         }
 
         [HttpGet("{id}")]
         public async Task<ActionResult<Game>> GetGameById(Guid id)
         {
-            var game = await _getGameByIdUseCase.Get(id);
-
+            var game = await _gameFacade.FindGameById(id);
             if (game == null)
                 return BadRequest(new { message = "Game by given id not found" });
-
             return Ok(game);
         }
 
         [HttpPost]
         public async Task<ActionResult<Guid>> FindGame()
         {
-            Guid id = await _findGameUseCase.FindGame();
-
+            Guid id = await _gameFacade.FindAvailableGameId();
             return Ok(id);
         }
     }

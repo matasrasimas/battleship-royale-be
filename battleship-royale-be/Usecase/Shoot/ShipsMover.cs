@@ -37,7 +37,7 @@ namespace battleship_royale_be.Usecase.Shoot
                     foreach (Coordinates coord in ship.Coordinates) {
                         updatedGrid[coord.Row, coord.Col].IsShip = true;
                     }
-                    updatedShips.Add(ship);
+                    updatedShips.Add(ShipBuilder.From(ship).Build());
                 }
             }
 
@@ -54,7 +54,8 @@ namespace battleship_royale_be.Usecase.Shoot
                 1 => new Coordinates(coords.Id, coords.Row + 1, coords.Col),
                 2 => new Coordinates(coords.Id, coords.Row - 1, coords.Col),
                 3 => new Coordinates(coords.Id, coords.Row, coords.Col + 1),
-                4 => new Coordinates(coords.Id, coords.Row, coords.Col - 1)
+                4 => new Coordinates(coords.Id, coords.Row, coords.Col - 1),
+                _ => new Coordinates(coords.Id, coords.Row + 1, coords.Col),
             };
         }
 

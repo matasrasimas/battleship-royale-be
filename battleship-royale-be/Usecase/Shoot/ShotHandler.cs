@@ -45,9 +45,9 @@ namespace battleship_royale_be.Usecase.Shoot
         private static List<Player> HandleActualShot(Player attackerPlayer, Player targetPlayer, ShotCoordinates targetCoords, Board board, int shotCount)
         {
             var cell = board.Grid[targetCoords.Row, targetCoords.Col];
-            bool isHit = cell.IsShip;
+            bool isShip = cell.IsShip;
 
-            if (isHit)
+            if (isShip)
             {
                 var newGrid = MarkCellAsHit(board, targetCoords);
                 var newBoard = new Board(newGrid, new List<Ship>(board.Ships));
@@ -56,16 +56,18 @@ namespace battleship_royale_be.Usecase.Shoot
             }
             else
             {
+                var newGrid = MarkCellAsHit(board, targetCoords);
+                var newBoard = new Board(newGrid, new List<Ship>(board.Ships));
                 shotsFired[attackerPlayer.Id]++;
                 int maxShots = shotStrategy.GetMaxShots(attackerPlayer.Ships.FirstOrDefault(ship => ship.HitPoints > 0));
 
                 if (shotsFired[attackerPlayer.Id] >= maxShots)
                 {
                     Console.WriteLine($"Player {attackerPlayer.Id} has reached maximum shots. Ending turn.");
-                    return HandleTurnEnd(attackerPlayer, targetPlayer, board);
+                    return HandleTurnEnd(attackerPlayer, targetPlayer, newBoard);
                 }
 
-                return HandleMissedShot(attackerPlayer, targetPlayer, board);
+                return HandleMissedShot(attackerPlayer, targetPlayer, newBoard);
             }
         }
 
@@ -125,7 +127,7 @@ namespace battleship_royale_be.Usecase.Shoot
                 PlayerBuilder
                 .From(targetPlayer)
                 .SetCells(GridConverter.FromArrayToList(boardAfterShot.Grid))
-                .SetShips(new List<Ship>(boardAfterShot.Ships))
+                .SetShips(boardAfterShot.Ships.Select(item => (Ship)item.Clone()).ToList())
                 .SetGameStatus(isDefeated ? "LOST" : "IN_PROGRESS")
                 .Build()
             };
@@ -157,9 +159,7 @@ namespace battleship_royale_be.Usecase.Shoot
                 .Build(),
 
                 PlayerBuilder
-                .From(targetPlayer)
-                .SetCells(GridConverter.FromArrayToList(board.Grid))
-                .SetShips(new List<Ship>(board.Ships))
+                .From(ShipsMover.MoveShips(targetPlayer, new List<Ship>(board.Ships), board.Grid))
                 .SetGameStatus("IN_PROGRESS")
                 .SetIsYourTurn(true)
                 .Build()
