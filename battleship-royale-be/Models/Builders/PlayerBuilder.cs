@@ -92,15 +92,15 @@
 
         public PlayerBuilder SetShips(List<Ship> ships)
         {
-            List<Ship> clonedShips = new List<Ship>();
-            foreach (Ship ship in ships)
+            List<Ship> clonedShips = ships.Select(item => (Ship)item.Clone()).ToList();
+            foreach (Ship ship in clonedShips)
             {
-                List<Coordinates> clonedCoordinates = new List<Coordinates>();
-                foreach (Coordinates coords in ship.Coordinates)
+                List<Coordinates> clonedCoordinates = ship.Coordinates;
+                foreach (Coordinates coords in clonedCoordinates)
                 {
-                    clonedCoordinates.Add(new Coordinates(Guid.NewGuid(), coords.Row, coords.Col));
+                    coords.Id = new Guid();
                 }
-                clonedShips.Add(new Ship(Guid.NewGuid(), ship.HitPoints, ship.IsHorizontal, ship.CanMove, clonedCoordinates));
+                ship.Id = new Guid();            
             }
             this.ships = clonedShips;
             return this;

@@ -127,7 +127,7 @@ namespace battleship_royale_be.Usecase.Shoot
                 PlayerBuilder
                 .From(targetPlayer)
                 .SetCells(GridConverter.FromArrayToList(boardAfterShot.Grid))
-                .SetShips(new List<Ship>(boardAfterShot.Ships))
+                .SetShips(boardAfterShot.Ships.Select(item => (Ship)item.Clone()).ToList())
                 .SetGameStatus(isDefeated ? "LOST" : "IN_PROGRESS")
                 .Build()
             };
