@@ -1,5 +1,8 @@
 ﻿using battleship_royale_be.Models;
 using battleship_royale_be.Models.Builders;
+using battleship_royale_be.DesignPatterns.Adapter;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace battleship_royale_be.Usecase.StartNewGame
 {
@@ -7,7 +10,7 @@ namespace battleship_royale_be.Usecase.StartNewGame
     {
         public static List<Ship> Generate(int gameLevel)
         {
-            List<ShipType> shipTypes = CreateShipTypesList(gameLevel);
+            List<IShip> shipTypes = CreateShipTypesList(gameLevel);
             List<Ship> ships = ConvertShipTypesToShipObjects(shipTypes, gameLevel);
 
             Random rng = new Random();
@@ -16,58 +19,51 @@ namespace battleship_royale_be.Usecase.StartNewGame
             return ships;
         }
 
-        private static List<ShipType> CreateShipTypesList(int gameLevel)
+        private static List<IShip> CreateShipTypesList(int gameLevel)
         {
-            return gameLevel == 1
-                ? new List<ShipType>
-                    {
-                        ShipType.CARRIER, ShipType.CARRIER,
-                        ShipType.BATTLESHIP, ShipType.BATTLESHIP,
-                        ShipType.CRUISER,
-                        ShipType.SUBMARINE,
-                    }
-                : new List<ShipType>
-                    {
-                        ShipType.CARRIER, ShipType.CARRIER, ShipType.CARRIER,
-                        ShipType.BATTLESHIP, ShipType.BATTLESHIP, ShipType.BATTLESHIP,
-                        ShipType.CRUISER, ShipType.CRUISER,
-                        ShipType.SUBMARINE,
-                        ShipType.DESTROYER,
-                    };
+            var shipTypes = new List<IShip>();
+
+            if (gameLevel == 1)
+            {
+                shipTypes.Add(new Carrier());
+                shipTypes.Add(new Carrier());
+                shipTypes.Add(new Battleship());
+                shipTypes.Add(new Battleship());
+                shipTypes.Add(new Cruiser());
+                shipTypes.Add(new Submarine());
+            }
+            else
+            {
+                shipTypes.Add(new Carrier());
+                shipTypes.Add(new Carrier());
+                shipTypes.Add(new Carrier());
+                shipTypes.Add(new Battleship());
+                shipTypes.Add(new Battleship());
+                shipTypes.Add(new Battleship());
+                shipTypes.Add(new Cruiser());
+                shipTypes.Add(new Cruiser());
+                shipTypes.Add(new Submarine());
+                shipTypes.Add(new Destroyer());
+            }
+
+            return shipTypes;
         }
 
-        private static List<Ship> ConvertShipTypesToShipObjects(List<ShipType> shipTypes, int gameLevel)
+        private static List<Ship> ConvertShipTypesToShipObjects(List<IShip> shipTypes, int gameLevel)
         {
             Random random = new Random();
             return shipTypes.Select(shipType =>
-                ShipBuilder
+            {
+                ShipAdapter shipAdapter = new ShipAdapter(shipType);
+                Ship ship = ShipBuilder
                     .DefaultValues()
-                    .SetHitPoints(GetShipHitPointsByType(shipType))
+                    .SetHitPoints(shipAdapter.GetHitPoints())
                     .SetIsHorizontal(random.NextDouble() < 0.5)
                     .SetCanMove(gameLevel == 2)
-                    .Build()
-            ).ToList();
-        }
+                    .Build();
 
-        private static int GetShipHitPointsByType(ShipType shipType)
-        {
-            return shipType switch
-            {
-                ShipType.CARRIER => 1,
-                ShipType.BATTLESHIP => 2,
-                ShipType.CRUISER => 3,
-                ShipType.SUBMARINE => 4,
-                ShipType.DESTROYER => 5,
-                _ => throw new ArgumentOutOfRangeException(nameof(shipType), $"Not expected shipType value: {shipType}"),
-            };
+                return ship;
+            }).ToList();
         }
-    }
-
-    public enum ShipType {
-        CARRIER,
-        BATTLESHIP,
-        CRUISER,
-        SUBMARINE,
-        DESTROYER
     }
 }
