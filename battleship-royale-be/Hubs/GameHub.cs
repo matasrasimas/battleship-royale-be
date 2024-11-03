@@ -44,6 +44,16 @@ namespace battleship_royale_be.Hubs
                 server);
         }
 
+        public async Task UpdateGameTime(int timeRemaining)
+        {
+            // Update the singleton instance
+            GameTime.Instance.UpdateTime(timeRemaining);
+
+            // Notify all clients about the updated time
+            await Clients.All.SendAsync("ReceiveTimeUpdate", GameTime.Instance.TimeRemaining);
+        }
+
+
         public async Task JoinSpecificGame(UserConnection conn)
         {
             var gameToJoin = await _gameFacade.FindGameById(conn.GameId);

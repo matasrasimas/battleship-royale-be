@@ -1,4 +1,4 @@
-﻿namespace battleship_royale_be.Models
+﻿﻿namespace battleship_royale_be.Models
 {
     public class Game
     {

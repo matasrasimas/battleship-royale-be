@@ -1,8 +1,8 @@
 using battleship_royale_be.Models;
 namespace battleship_royale_be.DesignPatterns.Adapter
 {
-    public interface IWeapon
+    public interface IShip
     {
-        int GetDamage(Ship ship);
+        int GetHitPoints();
     }
 }
