@@ -1,4 +1,6 @@
-﻿namespace battleship_royale_be.Models.Builders
+﻿using battleship_royale_be.DesignPatterns.Iterator;
+
+namespace battleship_royale_be.Models.Builders
 {
     public class PlayerBuilder
     {
@@ -16,27 +18,28 @@
 
         public static PlayerBuilder From(Player player)
         {
+            var grid = CreateGridFromCells(player.Cells);
+            var gridIterator = new GridIterator(grid);
             List<Cell> clonedCells = new List<Cell>();
-            foreach (Cell cell in player.Cells)
+            while (gridIterator.HasNext())
+            {
+                var cell = gridIterator.Next();
                 clonedCells.Add(new Cell(Guid.NewGuid(), cell.Row, cell.Col, cell.IsHit, cell.IsShip, cell.IsIsland));
-
+            }
             List<Cell> sortedCells = clonedCells
                 .OrderBy(c => c.Row)
                 .ThenBy(c => c.Col)
                 .ToList();
-
+            var shipIterator = new ShipIterator(player.Ships);
             List<Ship> clonedShips = new List<Ship>();
-            foreach (Ship ship in player.Ships)
+            while (shipIterator.HasNext())
             {
-                List<Coordinates> clonedCoordinates = new List<Coordinates>();
-                foreach (Coordinates coords in ship.Coordinates)
-                {
-                    clonedCoordinates.Add(new Coordinates(Guid.NewGuid(), coords.Row, coords.Col));
-                }
+                Ship ship = shipIterator.Next();
+                var clonedCoordinates = ship.Coordinates.Select(coords => new Coordinates(Guid.NewGuid(), coords.Row, coords.Col)).ToList();
                 clonedShips.Add(new Ship(Guid.NewGuid(), ship.HitPoints, ship.IsHorizontal, ship.CanMove, clonedCoordinates));
             }
 
-            var builder = new PlayerBuilder
+            return new PlayerBuilder
             {
                 id = player.Id,
                 connectionId = player.ConnectionId,
@@ -46,7 +49,6 @@
                 isYourTurn = player.IsYourTurn,
                 points = player.Points,
             };
-            return builder;
         }
 
         public static PlayerBuilder DefaultValues()
@@ -77,30 +79,27 @@
 
         public PlayerBuilder SetCells(List<Cell> cells)
         {
+            var grid = CreateGridFromCells(cells);
+            var gridIterator = new GridIterator(grid);
             List<Cell> clonedCells = new List<Cell>();
-            foreach(Cell cell in cells)
+            while (gridIterator.HasNext())
+            {
+                var cell = gridIterator.Next();
                 clonedCells.Add(new Cell(Guid.NewGuid(), cell.Row, cell.Col, cell.IsHit, cell.IsShip, cell.IsIsland));
-
-            List<Cell> sortedCells = clonedCells
-                .OrderBy(c => c.Row)
-                .ThenBy(c => c.Col)
-                .ToList();
-
-            this.cells = sortedCells;
+            }
+            this.cells = clonedCells.OrderBy(c => c.Row).ThenBy(c => c.Col).ToList();
             return this;
         }
 
         public PlayerBuilder SetShips(List<Ship> ships)
         {
-            List<Ship> clonedShips = ships.Select(item => (Ship)item.Clone()).ToList();
-            foreach (Ship ship in clonedShips)
+            var shipIterator = new ShipIterator(ships);
+            List<Ship> clonedShips = new List<Ship>();
+            while (shipIterator.HasNext())
             {
-                List<Coordinates> clonedCoordinates = ship.Coordinates;
-                foreach (Coordinates coords in clonedCoordinates)
-                {
-                    coords.Id = new Guid();
-                }
-                ship.Id = new Guid();            
+                Ship ship = shipIterator.Next();
+                var clonedCoordinates = ship.Coordinates.Select(coords => new Coordinates(Guid.NewGuid(), coords.Row, coords.Col)).ToList();
+                clonedShips.Add(new Ship(Guid.NewGuid(), ship.HitPoints, ship.IsHorizontal, ship.CanMove, clonedCoordinates));
             }
             this.ships = clonedShips;
             return this;
@@ -127,6 +126,17 @@
         public Player Build()
         {
             return new Player(id, connectionId, cells, ships, gameStatus, isYourTurn, points);
+        }
+
+        private static Cell[,] CreateGridFromCells(List<Cell> cells)
+        {
+            int gridSize = 10;
+            var grid = new Cell[gridSize, gridSize];
+            foreach (var cell in cells)
+            {
+                grid[cell.Row, cell.Col] = cell;
+            }
+            return grid;
         }
     }
 }
