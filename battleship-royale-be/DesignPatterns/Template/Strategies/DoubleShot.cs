@@ -1,6 +1,6 @@
-using battleship_royale_be.DesignPatterns.AbstractFactory.Ships;
+using battleship_royale_be.Models;
 
-namespace battleship_royale_be.DesignPatterns.Strategy
+namespace battleship_royale_be.DesignPatterns.Template.Strategies
 {
     public class DoubleShot : ShotStrategy
     {

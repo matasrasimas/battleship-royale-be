@@ -1,4 +1,5 @@
-﻿using battleship_royale_be.DesignPatterns.Strategy;
+﻿using battleship_royale_be.DesignPatterns.Template;
+using battleship_royale_be.DesignPatterns.Template.Strategies;
 using battleship_royale_be.Models.Builders;
 using battleship_royale_be.Models;
 using battleship_royale_be.Models.Converters;
@@ -11,13 +12,13 @@ namespace battleship_royale_be.Usecase.Shoot
     {
         private static Dictionary<Guid, int> shotsFired = new Dictionary<Guid, int>();
 
-        private static IShotStrategy GetShotStrategy(int shotCount)
+        private static ShotStrategy GetShotStrategy(int shotCount)
         {
             return shotCount switch
             {
-                1 => new SingleShotStrategy(),
-                2 => new DoubleShotStrategy(),
-                3 => new TripleShotStrategy(),
+                1 => new SingleShot(),
+                2 => new DoubleShot(),
+                3 => new TripleShot(),
                 _ => throw new ArgumentException("Invalid shot count")
             };
         }
@@ -72,6 +73,7 @@ namespace battleship_royale_be.Usecase.Shoot
                 var newBoard = new Board(newGrid, new List<Ship>(board.Ships));
                 shotsFired[attackerPlayer.Id]++;
 
+                // Use the template method to calculate damage
                 int maxShots = GetShotStrategy(shotsFired[attackerPlayer.Id]).GetDamage(attackingShip);
 
                 if (shotsFired[attackerPlayer.Id] >= maxShots)
@@ -83,7 +85,6 @@ namespace battleship_royale_be.Usecase.Shoot
                 return HandleMissedShot(attackerPlayer, targetPlayer, newBoard);
             }
         }
-
 
         private static Cell[,] MarkCellAsHit(Board board, ShotCoordinates targetCoords)
         {
