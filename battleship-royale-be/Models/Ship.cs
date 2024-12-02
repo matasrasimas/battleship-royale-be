@@ -40,13 +40,17 @@ namespace battleship_royale_be.Models
             return IsHorizontal ? startCoords.Col + HitPoints - 1 : startCoords.Col;
         }
 
-        public void Move()
+    
+
+        public void MoveByHitPoints(int hitPoints)
         {
-            if (!CanMove)
+             if (!CanMove)
             {
-                Console.WriteLine($"Ship {Id} cannot move.");
+                Console.WriteLine($"Ship {Id} cannot move or isn't part of the fleet.");
                 return;
             }
+            if(HitPoints == hitPoints)
+            {
             var random = new Random();
             int deltaRow = random.Next(-1, 2);
             int deltaCol = random.Next(-1, 2);
@@ -59,13 +63,6 @@ namespace battleship_royale_be.Models
                 );
             }
             Console.WriteLine($"Ship {Id} moved to new coordinates.");
-        }
-
-        public void MoveByHitPoints(int hitPoints)
-        {
-            if (HitPoints == hitPoints)
-            {
-                Move();
             }
         }
 
