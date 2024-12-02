@@ -44,6 +44,40 @@ namespace battleship_royale_be.Hubs
                 server);
         }
 
+
+
+public async Task MoveShipsByHitPoints(Guid playerId, int hitPoints)
+{
+    string playerIdString = playerId.ToString();
+    Player player = await _gameFacade.GetPlayerById(playerIdString);
+
+    if (player == null)
+    {
+        Console.WriteLine($"Player with ID {playerIdString} not found.");
+        return;
+    }
+
+    if (player.Ships != null && player.Ships.Count > 0)
+    {
+        foreach (var ship in player.Ships)
+        {
+            ship.MoveByHitPoints(hitPoints);
+        }
+
+        await Clients.All.SendAsync("ShipsMoved", hitPoints);
+    }
+    else
+    {
+        Console.WriteLine("No ships found for player.");
+    }
+}
+
+
+
+
+
+
+
         public async Task UpdateGameTime(int timeRemaining)
         {
             // Update the singleton instance

@@ -1,7 +1,7 @@
-namespace battleship_royale_be.DesignPatterns.Composite
+using battleship_royale_be.Models;
+namespace battleship_royale_be.DesignPatterns.Composite;
+
+public interface IShipComponent
 {
-    public interface IShipComponent
-    {
-        void Move();
-    }
+    void MoveByHitPoints(int hitPoints);
 }
