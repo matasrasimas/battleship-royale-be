@@ -1,6 +1,4 @@
-﻿using battleship_royale_be.DesignPatterns.Iterator;
-
-namespace battleship_royale_be.Models.Builders
+﻿namespace battleship_royale_be.Models.Builders
 {
     public class PlayerBuilder
     {
@@ -18,32 +16,25 @@ namespace battleship_royale_be.Models.Builders
 
         public static PlayerBuilder From(Player player)
         {
-            var grid = CreateGridFromCells(player.Cells);
-            var gridIterator = new GridIterator(grid);
-            List<Cell> clonedCells = new List<Cell>();
-            while (gridIterator.HasNext())
-            {
-                var cell = gridIterator.Next();
-                clonedCells.Add(new Cell(Guid.NewGuid(), cell.Row, cell.Col, cell.IsHit, cell.IsShip, cell.IsIsland));
-            }
-            List<Cell> sortedCells = clonedCells
+            // Clone cells with new Guid for each one and sort
+            List<Cell> clonedCells = player.Cells
+                .Select(cell => new Cell(Guid.NewGuid(), cell.Row, cell.Col, cell.IsHit, cell.IsShip, cell.IsIsland))
                 .OrderBy(c => c.Row)
                 .ThenBy(c => c.Col)
                 .ToList();
-            var shipIterator = new ShipIterator(player.Ships);
-            List<Ship> clonedShips = new List<Ship>();
-            while (shipIterator.HasNext())
+
+            // Clone ships and coordinates
+            List<Ship> clonedShips = player.Ships.Select(ship =>
             {
-                Ship ship = shipIterator.Next();
                 var clonedCoordinates = ship.Coordinates.Select(coords => new Coordinates(Guid.NewGuid(), coords.Row, coords.Col)).ToList();
-                clonedShips.Add(new Ship(Guid.NewGuid(), ship.HitPoints, ship.IsHorizontal, ship.CanMove, clonedCoordinates));
-            }
+                return new Ship(Guid.NewGuid(), ship.HitPoints, ship.IsHorizontal, ship.CanMove, clonedCoordinates);
+            }).ToList();
 
             return new PlayerBuilder
             {
                 id = player.Id,
                 connectionId = player.ConnectionId,
-                cells = sortedCells,
+                cells = clonedCells,
                 ships = clonedShips,
                 gameStatus = player.GameStatus,
                 isYourTurn = player.IsYourTurn,
@@ -79,29 +70,23 @@ namespace battleship_royale_be.Models.Builders
 
         public PlayerBuilder SetCells(List<Cell> cells)
         {
-            var grid = CreateGridFromCells(cells);
-            var gridIterator = new GridIterator(grid);
-            List<Cell> clonedCells = new List<Cell>();
-            while (gridIterator.HasNext())
-            {
-                var cell = gridIterator.Next();
-                clonedCells.Add(new Cell(Guid.NewGuid(), cell.Row, cell.Col, cell.IsHit, cell.IsShip, cell.IsIsland));
-            }
-            this.cells = clonedCells.OrderBy(c => c.Row).ThenBy(c => c.Col).ToList();
+            // Clone cells with new Guid for each one and sort
+            this.cells = cells
+                .Select(cell => new Cell(Guid.NewGuid(), cell.Row, cell.Col, cell.IsHit, cell.IsShip, cell.IsIsland))
+                .OrderBy(c => c.Row)
+                .ThenBy(c => c.Col)
+                .ToList();
             return this;
         }
 
         public PlayerBuilder SetShips(List<Ship> ships)
         {
-            var shipIterator = new ShipIterator(ships);
-            List<Ship> clonedShips = new List<Ship>();
-            while (shipIterator.HasNext())
+            // Clone ships and coordinates with new Guid for each coordinate
+            this.ships = ships.Select(ship =>
             {
-                Ship ship = shipIterator.Next();
                 var clonedCoordinates = ship.Coordinates.Select(coords => new Coordinates(Guid.NewGuid(), coords.Row, coords.Col)).ToList();
-                clonedShips.Add(new Ship(Guid.NewGuid(), ship.HitPoints, ship.IsHorizontal, ship.CanMove, clonedCoordinates));
-            }
-            this.ships = clonedShips;
+                return new Ship(Guid.NewGuid(), ship.HitPoints, ship.IsHorizontal, ship.CanMove, clonedCoordinates);
+            }).ToList();
             return this;
         }
 
