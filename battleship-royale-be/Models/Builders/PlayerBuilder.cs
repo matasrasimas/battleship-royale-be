@@ -24,7 +24,7 @@ namespace battleship_royale_be.Models.Builders
             while (gridIterator.HasNext())
             {
                 var cell = gridIterator.Next();
-                clonedCells.Add(new Cell(Guid.NewGuid(), cell.Row, cell.Col, cell.IsHit, cell.IsShip, cell.IsIsland));
+                clonedCells.Add(new Cell(Guid.NewGuid(), cell.Row, cell.Col, cell.IsHit, cell.IsShip, cell.IsIsland, cell.ImagePath));
             }
             List<Cell> sortedCells = clonedCells
                 .OrderBy(c => c.Row)
@@ -36,7 +36,7 @@ namespace battleship_royale_be.Models.Builders
             {
                 Ship ship = shipIterator.Next();
                 var clonedCoordinates = ship.Coordinates.Select(coords => new Coordinates(Guid.NewGuid(), coords.Row, coords.Col)).ToList();
-                clonedShips.Add(new Ship(Guid.NewGuid(), ship.HitPoints, ship.IsHorizontal, ship.CanMove, clonedCoordinates));
+                clonedShips.Add(new Ship(Guid.NewGuid(), ship.HitPoints, ship.IsHorizontal, ship.CanMove, clonedCoordinates, ship.ImagePath));
             }
 
             return new PlayerBuilder
@@ -85,7 +85,7 @@ namespace battleship_royale_be.Models.Builders
             while (gridIterator.HasNext())
             {
                 var cell = gridIterator.Next();
-                clonedCells.Add(new Cell(Guid.NewGuid(), cell.Row, cell.Col, cell.IsHit, cell.IsShip, cell.IsIsland));
+                clonedCells.Add(new Cell(Guid.NewGuid(), cell.Row, cell.Col, cell.IsHit, cell.IsShip, cell.IsIsland, cell.ImagePath));
             }
             this.cells = clonedCells.OrderBy(c => c.Row).ThenBy(c => c.Col).ToList();
             return this;
@@ -99,7 +99,7 @@ namespace battleship_royale_be.Models.Builders
             {
                 Ship ship = shipIterator.Next();
                 var clonedCoordinates = ship.Coordinates.Select(coords => new Coordinates(Guid.NewGuid(), coords.Row, coords.Col)).ToList();
-                clonedShips.Add(new Ship(Guid.NewGuid(), ship.HitPoints, ship.IsHorizontal, ship.CanMove, clonedCoordinates));
+                clonedShips.Add(new Ship(Guid.NewGuid(), ship.HitPoints, ship.IsHorizontal, ship.CanMove, clonedCoordinates, ship.ImagePath));
             }
             this.ships = clonedShips;
             return this;

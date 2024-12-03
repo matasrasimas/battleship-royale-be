@@ -91,7 +91,7 @@ namespace battleship_royale_be.Usecase.Shoot
             var newGrid = (Cell[,])board.Grid.Clone();
             var cell = newGrid[targetCoords.Row, targetCoords.Col];
             newGrid[targetCoords.Row, targetCoords.Col] =
-                new Cell(Guid.NewGuid(), targetCoords.Row, targetCoords.Col, true, cell.IsShip, cell.IsIsland);
+                new Cell(Guid.NewGuid(), targetCoords.Row, targetCoords.Col, true, cell.IsShip, cell.IsIsland, cell.ImagePath);
             return newGrid;
         }
 
