@@ -1,6 +1,6 @@
 ﻿using battleship_royale_be.Models;
 using battleship_royale_be.Models.Builders;
-using battleship_royale_be.DesignPatterns.Adapter;
+using battleship_royale_be.DesignPatterns.Adapter_Flyweight;
 using System.Collections.Generic;
 using System.Linq;
 
