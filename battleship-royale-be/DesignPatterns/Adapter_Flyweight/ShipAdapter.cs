@@ -1,6 +1,6 @@
-using battleship_royale_be.DesignPatterns.Adapter;
+using battleship_royale_be.DesignPatterns.Adapter_Flyweight;
 
-namespace battleship_royale_be.DesignPatterns.Adapter
+namespace battleship_royale_be.DesignPatterns.Adapter_Flyweight
 {
     public class ShipAdapter
     {

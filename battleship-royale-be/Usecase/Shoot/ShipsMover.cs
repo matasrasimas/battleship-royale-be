@@ -30,6 +30,7 @@ namespace battleship_royale_be.Usecase.Shoot
                     foreach (Coordinates newCoord in newCoordinates)
                     {
                         updatedGrid[newCoord.Row, newCoord.Col].IsShip = true;
+                        updatedGrid[newCoord.Row, newCoord.Col].ImagePath = ship.ImagePath;
                     }
                     updatedShips.Add(shipWithUpdatedCoords);
                 }
