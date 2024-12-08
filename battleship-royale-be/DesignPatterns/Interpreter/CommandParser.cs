@@ -14,7 +14,7 @@ namespace battleship_royale_be.DesignPatterns.Interpreter
                 "/undo" => new UndoExpression(),
                 var str when MyRegex().IsMatch(str) => new ShootExpression(
                                                     int.Parse(input.Split(' ')[1]) - 1,
-                                                    int.Parse(input.Split(' ')[2]) - 1),
+                                                   int.Parse(input.Split(' ')[2]) - 1),
                 _ => new InvalidExpression(),
             };
         }

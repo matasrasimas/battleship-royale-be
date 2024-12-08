@@ -10,9 +10,9 @@ namespace battleship_royale_be.DesignPatterns.Interpreter
         {
             _message = message;
         }
-        public void Interpret(GameHub hub)
+        public async Task Interpret(GameHub hub)
         {
-            hub.MessageCommand(_message);
+            await hub.MessageCommand(_message);
         }
     }
     public class ShootExpression : IExpression
@@ -22,37 +22,37 @@ namespace battleship_royale_be.DesignPatterns.Interpreter
         {
             _shotCoordinates = new ShotCoordinates(row, col);
         }
-        public void Interpret(GameHub hub)
+        public async Task Interpret(GameHub hub)
         {
-            hub.ShootCommand(_shotCoordinates);
+            await hub.ShootCommand(_shotCoordinates);
         }
     }
     public class PauseExpression : IExpression
     {
-        public void Interpret(GameHub hub)
+        public async Task Interpret(GameHub hub)
         {
-            hub.PauseCommand();
+            await hub.PauseCommand();
         }
     }
     public class SurrenderExpression : IExpression
     {
-        public async void Interpret(GameHub hub)
+        public async Task Interpret(GameHub hub)
         {
             await hub.HandleSurrender();
         }
     }
     public class UndoExpression : IExpression
     {
-        public void Interpret(GameHub hub)
+        public async Task Interpret(GameHub hub)
         {
-            hub.UndoCommand();
+            await hub.UndoCommand();
         }
     }
     public class InvalidExpression : IExpression
     {
-        public void Interpret(GameHub hub)
+        public async Task Interpret(GameHub hub)
         {
-            hub.InvalidCommand();
+            await hub.InvalidCommand();
         }
     }
 }

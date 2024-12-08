@@ -110,10 +110,10 @@ namespace battleship_royale_be.Hubs
             }
         }
 
-        public void SendMessage(string message)
+        public async Task SendMessage(string message)
         {
             IExpression expression = CommandParser.Parse(message);
-            expression.Interpret(this);
+            await expression.Interpret(this);
         }
 
         public override async Task OnDisconnectedAsync(Exception exception)
@@ -137,7 +137,7 @@ namespace battleship_royale_be.Hubs
             await Clients.Caller
                 .SendAsync("GetYourConnectionId", Context.ConnectionId, Context.ConnectionId);
         }
-        public async void MessageCommand(string message)
+        public async Task MessageCommand(string message)
         {
             var conn = await _gameFacade.GetUserConnectionById(Context.ConnectionId);
             if (conn != null)
@@ -151,11 +151,11 @@ namespace battleship_royale_be.Hubs
                 }
             }
         }
-        public async void SurrenderCommand()
+        public async Task SurrenderCommand()
         {
             await HandleSurrender();
         }
-        public async void ShootCommand(ShotCoordinates shotCoords)
+        public async Task ShootCommand(ShotCoordinates shotCoords)
         {
             var conn = await _gameFacade.GetUserConnectionById(Context.ConnectionId);
             if (conn != null)
@@ -176,7 +176,7 @@ namespace battleship_royale_be.Hubs
                 }
             }
         }
-        public async void PauseCommand()
+        public async Task PauseCommand()
         {
             var conn = await _gameFacade.GetUserConnectionById(Context.ConnectionId);
             Game gameAfterPause = await _gameFacade.PauseGame(conn);
@@ -186,9 +186,10 @@ namespace battleship_royale_be.Hubs
                     .SendAsync("ReceiveGameAfterCommand", gameAfterPause);
             }
         }
-        public async void UndoCommand()
+        public async Task UndoCommand()
         {
-            Game backup = await _gameFacade.Undo(Context.ConnectionId);
+            var conn = await _gameFacade.GetUserConnectionById(Context.ConnectionId);
+            Game backup = await _gameFacade.Undo(conn.Id);
 
             if (backup == null)
             {
@@ -201,7 +202,7 @@ namespace battleship_royale_be.Hubs
                     .SendAsync("ReceiveGameAfterCommand", backup);
             }
         }
-        public async void InvalidCommand()
+        public async Task InvalidCommand()
         {
             await Clients.Caller
                 .SendAsync("ReceiveMessage", "System", "Command not found");

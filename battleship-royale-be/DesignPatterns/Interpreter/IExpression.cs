@@ -4,6 +4,6 @@ namespace battleship_royale_be.DesignPatterns.Interpreter
 {
     public interface IExpression
     {
-        void Interpret(GameHub hub);
+        Task Interpret(GameHub hub);
     }
 }
