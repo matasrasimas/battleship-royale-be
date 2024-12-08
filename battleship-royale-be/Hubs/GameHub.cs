@@ -198,7 +198,7 @@ namespace battleship_royale_be.Hubs
             }
             else
             {
-                await Clients.Group(Context.ConnectionId)
+                await Clients.Group(conn.GameId)
                     .SendAsync("ReceiveGameAfterCommand", backup);
             }
         }
