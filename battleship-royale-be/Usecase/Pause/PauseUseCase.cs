@@ -1,4 +1,5 @@
 using battleship_royale_be.Data;
+using battleship_royale_be.DesignPatterns.Proxy;
 using battleship_royale_be.Models;
 using battleship_royale_be.Models.Builders;
 using battleship_royale_be.Usecase.Shoot;
@@ -10,6 +11,7 @@ namespace battleship_royale_be.Usecase.Pause
     {
         private readonly BattleshipAPIContext _context;
         private Game _backup;
+        private GamePauser _gamePauser = new ProxyGamePauser();
 
         public PauseUseCase(BattleshipAPIContext context)
         {
@@ -43,20 +45,7 @@ namespace battleship_royale_be.Usecase.Pause
             if (playerThatDoesNotWantToPause == null)
                 return null;
 
-            List<Player> playersListAfterPause =
-            [
-                PlayerBuilder
-                  .From(playerThatWantsToPause)
-                  .SetGameStatus("PAUSED_HOST")
-                  .Build(),
-
-                PlayerBuilder
-                  .From(playerThatDoesNotWantToPause)
-                  .SetGameStatus("PAUSED")
-                  .Build()
-            ];
-
-            Game gameAfterPause = GameBuilder.From(gameToUpdate).SetPlayers(playersListAfterPause).Build();
+            Game gameAfterPause = _gamePauser.PauseGame(gameToUpdate, playerThatWantsToPause, playerThatDoesNotWantToPause);
 
             foreach (Player player in gameToUpdate.Players)
             {

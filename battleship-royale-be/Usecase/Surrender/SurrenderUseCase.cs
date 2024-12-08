@@ -1,4 +1,5 @@
 ﻿using battleship_royale_be.Data;
+using battleship_royale_be.DesignPatterns.Proxy.GameSurrenderer;
 using battleship_royale_be.Models;
 using battleship_royale_be.Models.Builders;
 using battleship_royale_be.Usecase.Shoot;
@@ -9,6 +10,7 @@ namespace battleship_royale_be.Usecase.Surrender
     public class SurrenderUseCase : ISurrenderUseCase
     {
         private readonly BattleshipAPIContext _context;
+        private GameSurrenderer _gameSurrenderer = new ProxyGameSurrenderer();
 
         public SurrenderUseCase(BattleshipAPIContext context)
         {
@@ -37,19 +39,7 @@ namespace battleship_royale_be.Usecase.Surrender
             if (playerThatDoesNotWantToSurrender == null)
                 return null;
 
-            List<Player> playersListAfterSurrender = new List<Player> {
-                PlayerBuilder
-                  .From(playerThatWantsToSurrender)
-                  .SetGameStatus("LOST")
-                  .Build(),
-
-                PlayerBuilder
-                  .From(playerThatDoesNotWantToSurrender)
-                  .SetGameStatus("WON")
-                  .Build()
-            };
-
-            Game gameAfterSurrender = GameBuilder.From(gameToUpdate).SetPlayers(playersListAfterSurrender).Build();
+            Game gameAfterSurrender = _gameSurrenderer.SurrenderGame(gameToUpdate, playerThatWantsToSurrender, playerThatDoesNotWantToSurrender);
 
             foreach (Player player in gameToUpdate.Players)
             {
