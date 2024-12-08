@@ -1,6 +1,7 @@
 ﻿using System.Text.RegularExpressions;
 using battleship_royale_be.Data;
 using battleship_royale_be.DesignPatterns.Facade;
+using battleship_royale_be.DesignPatterns.Interpreter;
 using battleship_royale_be.Models;
 using battleship_royale_be.Models.Builders;
 using battleship_royale_be.Models.Command;
@@ -109,76 +110,10 @@ namespace battleship_royale_be.Hubs
             }
         }
 
-        public async Task SendMessage(string message)
+        public void SendMessage(string message)
         {
-            var conn = await _gameFacade.GetUserConnectionById(Context.ConnectionId);
-            if (conn != null)
-            {
-                var player = await _gameFacade.GetPlayerById(conn.Id);
-                if (player != null)
-                {
-                    var playerIndex = await _gameFacade.GetPlayerIndex(player);
-                    if (message.StartsWith('/'))
-                    {
-                        switch (message)
-                        {
-                            case "/surrender":
-                                await HandleSurrender();
-                                break;
-                            case var str when MyRegex().IsMatch(str):
-                                var shotCoords = new ShotCoordinates(
-                                    int.Parse(message.Split(' ')[1]) - 1,
-                                    int.Parse(message.Split(' ')[2]) - 1
-                                );
-                                if (!player.IsYourTurn)
-                                {
-                                    await Clients.Caller
-                                        .SendAsync("ReceiveMessage", "System", "Cannot shoot: It's not your turn");
-                                    return;
-                                }
-                                else
-                                {
-                                    // TODO : add check for valid coordinates
-                                    await MakeShot(shotCoords, 1);
-                                    //await Clients.Caller
-                                    //    .SendAsync("ReceiveMessage", "System", "You made a shot at " + (shotCoords.Row + 1) + " " + (shotCoords.Col + 1));
-                                }
-                                break;
-                            case "/pause":
-                                Game gameAfterPause = await _gameFacade.PauseGame(conn);
-                                if (gameAfterPause != null)
-                                {
-                                    await Clients.Group(conn.GameId)
-                                        .SendAsync("ReceiveGameAfterCommand", gameAfterPause);
-                                }
-                                break;
-                            case "/undo":
-                                Game backup = await _gameFacade.Undo(conn.Id);
-
-                                if (backup == null)
-                                {
-                                    await Clients.Caller
-                                        .SendAsync("ReceiveMessage", "System", "Cannot undo");
-                                }
-                                else
-                                {
-                                    await Clients.Group(conn.GameId)
-                                        .SendAsync("ReceiveGameAfterCommand", backup);
-                                }
-                                break;
-                            default:
-                                await Clients.Caller
-                                    .SendAsync("ReceiveMessage", "System", "Command not found");
-                                break;
-                        }
-                    }
-                    else
-                    {
-                        await Clients.Group(conn.GameId)
-                            .SendAsync("ReceiveMessage", "Player " + playerIndex, message);
-                    }
-                }
-            }
+            IExpression expression = CommandParser.Parse(message);
+            expression.Interpret(this);
         }
 
         public override async Task OnDisconnectedAsync(Exception exception)
@@ -202,9 +137,74 @@ namespace battleship_royale_be.Hubs
             await Clients.Caller
                 .SendAsync("GetYourConnectionId", Context.ConnectionId, Context.ConnectionId);
         }
+        public async void MessageCommand(string message)
+        {
+            var conn = await _gameFacade.GetUserConnectionById(Context.ConnectionId);
+            if (conn != null)
+            {
+                var player = await _gameFacade.GetPlayerById(conn.Id);
+                if (player != null)
+                {
+                    var playerIndex = await _gameFacade.GetPlayerIndex(player);
+                    await Clients.Group(conn.GameId)
+                        .SendAsync("ReceiveMessage", "Player " + playerIndex, message);
+                }
+            }
+        }
+        public async void SurrenderCommand()
+        {
+            await HandleSurrender();
+        }
+        public async void ShootCommand(ShotCoordinates shotCoords)
+        {
+            var conn = await _gameFacade.GetUserConnectionById(Context.ConnectionId);
+            if (conn != null)
+            {
+                var player = await _gameFacade.GetPlayerById(conn.Id);
+                if (player != null)
+                {
+                    if (!player.IsYourTurn)
+                    {
+                        await Clients.Caller
+                            .SendAsync("ReceiveMessage", "System", "Cannot shoot: It's not your turn");
+                        return;
+                    }
+                    else
+                    {
+                        await MakeShot(shotCoords, 1);
+                    }
+                }
+            }
+        }
+        public async void PauseCommand()
+        {
+            var conn = await _gameFacade.GetUserConnectionById(Context.ConnectionId);
+            Game gameAfterPause = await _gameFacade.PauseGame(conn);
+            if (gameAfterPause != null)
+            {
+                await Clients.Group(conn.GameId)
+                    .SendAsync("ReceiveGameAfterCommand", gameAfterPause);
+            }
+        }
+        public async void UndoCommand()
+        {
+            Game backup = await _gameFacade.Undo(Context.ConnectionId);
 
-
-        [GeneratedRegex(@"^/shoot \d+ \d+$")]
-        private static partial Regex MyRegex();
+            if (backup == null)
+            {
+                await Clients.Caller
+                    .SendAsync("ReceiveMessage", "System", "Cannot undo");
+            }
+            else
+            {
+                await Clients.Group(Context.ConnectionId)
+                    .SendAsync("ReceiveGameAfterCommand", backup);
+            }
+        }
+        public async void InvalidCommand()
+        {
+            await Clients.Caller
+                .SendAsync("ReceiveMessage", "System", "Command not found");
+        }
     }
 }
