@@ -1,5 +1,6 @@
 using battleship_royale_be.Data;
 using battleship_royale_be.DesignPatterns.Proxy;
+using battleship_royale_be.DesignPatterns.Proxy.GamePauser;
 using battleship_royale_be.Models;
 using battleship_royale_be.Models.Builders;
 using battleship_royale_be.Usecase.Shoot;

@@ -1,7 +1,7 @@
 ﻿using battleship_royale_be.Models;
 using battleship_royale_be.Models.Builders;
 
-namespace battleship_royale_be.DesignPatterns.Proxy
+namespace battleship_royale_be.DesignPatterns.Proxy.GamePauser
 {
     public class ProxyGamePauser : GamePauser
     {
