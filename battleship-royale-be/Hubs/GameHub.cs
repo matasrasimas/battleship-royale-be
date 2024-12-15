@@ -9,6 +9,7 @@ using battleship_royale_be.Models.Observer;
 using battleship_royale_be.Usecase.CreateNewGame;
 using battleship_royale_be.Usecase.FindGameUseCase;
 using battleship_royale_be.Usecase.GetGameById;
+using battleship_royale_be.Usecase.Move;
 using battleship_royale_be.Usecase.Pause;
 using battleship_royale_be.Usecase.Shoot;
 using battleship_royale_be.Usecase.StartNewGame;
@@ -26,6 +27,7 @@ namespace battleship_royale_be.Hubs
             ICreateNewPlayerUseCase createNewPlayerUseCase,
             IGetGameByIdUseCase getGameByIdUseCase,
             IShootUseCase shootUseCase,
+            IMoveUseCase moveUseCase,
             IAddPlayerToGameUseCase addPlayerToGameUseCase,
             ISurrenderUseCase surrenderUseCase,
             IPauseUseCase pauseUseCase,
@@ -37,6 +39,7 @@ namespace battleship_royale_be.Hubs
                 createNewPlayerUseCase,
                 getGameByIdUseCase,
                 shootUseCase,
+                moveUseCase,
                 addPlayerToGameUseCase,
                 surrenderUseCase,
                 pauseUseCase,
@@ -47,51 +50,19 @@ namespace battleship_royale_be.Hubs
 
 
 
-        public async Task MoveShipsByHitPoints(string playerId, int hitPoints)
+        public async Task MoveShipsByHitPoints(int hitPoints)
         {
-
-            // Log the start of the method call
-            Console.WriteLine($"MoveShipsByHitPoints called for player {playerId} with hitPoints: {hitPoints}");
-            Player player = await _gameFacade.GetPlayerById(playerId);
-
-            if (player == null)
+            var conn = await _gameFacade.GetUserConnectionById(Context.ConnectionId);
+            if (conn != null)
             {
-                // Log when player is not found
-                Console.WriteLine($"Player with ID {playerId} not found.");
-                await Clients.Caller.SendAsync("LogMessage", $"Player with ID {playerId} not found.");
-                return;
-            }
-
-            if (player.Ships != null && player.Ships.Count > 0)
-            {
-                // Log the player and ship count
-                Console.WriteLine($"Player {playerId} has {player.Ships.Count} ships.");
-
-                foreach (var ship in player.Ships)
+                Console.WriteLine("You have chosen this many hitpoints " +  hitPoints.ToString());
+                Game gameAfterShipMove = await _gameFacade.MoveShipsByHitPoints(hitPoints, conn);
+                if (gameAfterShipMove != null)
                 {
-                    // Log the ship's initial state before moving
-                    string beforeMoveMessage = $"Before moving: Ship {ship.HitPoints} is at position {ship.Coordinates}.";
-                    Console.WriteLine(beforeMoveMessage);  // Log to console
-                    await Clients.Caller.SendAsync("LogMessage", beforeMoveMessage);
-
-                    // Move the ship by the given hit points
-                    ship.MoveByHitPoints(hitPoints);
-
-                    // Log the ship's state after moving
-                    string afterMoveMessage = $"After moving: Ship {ship.HitPoints} is now at position {ship.Coordinates}.";
-                    Console.WriteLine(afterMoveMessage);  // Log to console
-                    await Clients.Caller.SendAsync("LogMessage", afterMoveMessage);
+                    _gameFacade.NotifyAll("Player " + Context.ConnectionId + "moved " +hitPoints + "hitpoints fleet");
+                    await Clients.Group(conn.GameId)
+                        .SendAsync("ReceiveGameAfterShipMove", conn.Id, gameAfterShipMove);
                 }
-
-                // Notify all clients that ships have moved
-                Console.WriteLine($"Ships moved for player {playerId} by {hitPoints} hit points.");
-                await Clients.All.SendAsync("ShipsMoved", hitPoints);
-            }
-            else
-            {
-                // Log when no ships are found for the player
-                Console.WriteLine($"No ships found for player {playerId}.");
-                await Clients.Caller.SendAsync("LogMessage", "No ships found for player.");
             }
         }
 

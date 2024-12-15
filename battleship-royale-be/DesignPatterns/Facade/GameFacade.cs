@@ -6,6 +6,7 @@ using battleship_royale_be.Models.Observer;
 using battleship_royale_be.Usecase.CreateNewGame;
 using battleship_royale_be.Usecase.FindGameUseCase;
 using battleship_royale_be.Usecase.GetGameById;
+using battleship_royale_be.Usecase.Move;
 using battleship_royale_be.Usecase.Pause;
 using battleship_royale_be.Usecase.Shoot;
 using battleship_royale_be.Usecase.StartNewGame;
@@ -21,6 +22,7 @@ namespace battleship_royale_be.DesignPatterns.Facade
         private readonly ICreateNewPlayerUseCase _createNewPlayerUseCase;
         private readonly IGetGameByIdUseCase _getGameByIdUseCase;
         private readonly IShootUseCase _shootUseCase;
+        private readonly IMoveUseCase _moveUseCase;
         private readonly IAddPlayerToGameUseCase _addPlayerToGameUseCase;
         private readonly ISurrenderUseCase _surrenderUseCase;
         private readonly IPauseUseCase _pauseUseCase;
@@ -32,6 +34,7 @@ namespace battleship_royale_be.DesignPatterns.Facade
             ICreateNewPlayerUseCase createNewPlayerUseCase,
             IGetGameByIdUseCase getGameByIdUseCase,
             IShootUseCase shootUseCase,
+            IMoveUseCase moveUseCase,
             IAddPlayerToGameUseCase addPlayerToGameUseCase,
             ISurrenderUseCase surrenderUseCase,
             IPauseUseCase pauseUseCase,
@@ -43,6 +46,7 @@ namespace battleship_royale_be.DesignPatterns.Facade
             _createNewPlayerUseCase = createNewPlayerUseCase;
             _getGameByIdUseCase = getGameByIdUseCase;
             _shootUseCase = shootUseCase;
+            _moveUseCase = moveUseCase;
             _addPlayerToGameUseCase = addPlayerToGameUseCase;
             _surrenderUseCase = surrenderUseCase;
             _pauseUseCase = pauseUseCase;
@@ -169,7 +173,12 @@ namespace battleship_royale_be.DesignPatterns.Facade
         {
             return await _commandController.Run(new ShootCommand(_shootUseCase, Guid.Parse(conn.GameId), shotCoords, conn.Id, shotCount));
         }
-
+        
+        public async Task<Game> MoveShipsByHitPoints(int hitpoints, UserConnection conn)
+        {
+            return await _commandController.Run(new MoveCommand(_moveUseCase, Guid.Parse(conn.GameId), conn.Id, hitpoints));
+        }
+        
         public async Task<Game> TryToSurrender(string connectionId)
         {
             var conn = await GetUserConnectionById(connectionId);

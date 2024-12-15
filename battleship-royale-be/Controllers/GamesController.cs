@@ -4,6 +4,7 @@ using battleship_royale_be.Usecase.StartNewGame;
 using battleship_royale_be.Usecase.GetGameById;
 using battleship_royale_be.Models;
 using battleship_royale_be.Usecase.Shoot;
+using battleship_royale_be.Usecase.Move;
 using battleship_royale_be.Usecase.CreateNewGame;
 using battleship_royale_be.Usecase.FindGameUseCase;
 using battleship_royale_be.DesignPatterns.Facade;
@@ -24,6 +25,7 @@ namespace battleship_royale_be.Controllers
             ICreateNewPlayerUseCase createNewPlayerUseCase,
             IGetGameByIdUseCase getGameByIdUseCase,
             IShootUseCase shootUseCase,
+            IMoveUseCase moveUseCase,
             IAddPlayerToGameUseCase addPlayerToGameUseCase,
             ISurrenderUseCase surrenderUseCase,
             IPauseUseCase pauseUseCase,
@@ -35,6 +37,7 @@ namespace battleship_royale_be.Controllers
                             createNewPlayerUseCase,
                             getGameByIdUseCase,
                             shootUseCase,
+                            moveUseCase,
                             addPlayerToGameUseCase,
                             surrenderUseCase,
                             pauseUseCase,

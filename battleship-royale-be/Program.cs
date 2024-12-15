@@ -10,6 +10,7 @@ using battleship_royale_be.Usecase.Surrender;
 using battleship_royale_be.Models.Command;
 using battleship_royale_be.Usecase.Pause;
 using battleship_royale_be.Models.Observer;
+using battleship_royale_be.Usecase.Move;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -26,6 +27,7 @@ builder.Services.AddDbContext<BattleshipAPIContext>(options =>
 builder.Services.AddScoped<ICreateNewPlayerUseCase, CreateNewPlayerUseCase>();
 builder.Services.AddScoped<IGetGameByIdUseCase, GetGameByIdUseCase>();
 builder.Services.AddScoped<IShootUseCase, ShootUseCase>();
+builder.Services.AddScoped<IMoveUseCase, MoveUseCase>();
 builder.Services.AddScoped<IAddPlayerToGameUseCase, AddPlayerToGameUseCase>();
 builder.Services.AddScoped<IFindGameUseCase, FindGameUseCase>();
 builder.Services.AddScoped<ISurrenderUseCase, SurrenderUseCase>();
