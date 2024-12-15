@@ -81,7 +81,24 @@ namespace battleship_royale_be.DesignPatterns.Facade
 
         public async Task<Player> GetPlayerById(string connectionId)
         {
-            return await _context.Players.Where(player => player.ConnectionId == connectionId).FirstOrDefaultAsync();
+            Console.WriteLine($"Searching for player with ConnectionId: {connectionId}");
+
+            var player = await _context.Players
+                                        .Include(p => p.Ships)  // Eagerly load Ships
+                                        .Where(player => player.ConnectionId == connectionId)
+                                        .FirstOrDefaultAsync();
+
+            if (player != null)
+            {
+                Console.WriteLine($"Player found: {player.Id} with ConnectionId: {player.ConnectionId}");
+                Console.WriteLine($"Player {player.Id} has {player.Ships?.Count ?? 0} ships.");
+            }
+            else
+            {
+                Console.WriteLine($"No player found with ConnectionId: {connectionId}");
+            }
+
+            return player;
         }
 
         public async Task<int> GetPlayerIndex(Player player)

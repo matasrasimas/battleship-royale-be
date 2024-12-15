@@ -45,6 +45,63 @@ namespace battleship_royale_be.Hubs
                 server);
         }
 
+
+
+        public async Task MoveShipsByHitPoints(string playerId, int hitPoints)
+        {
+
+            // Log the start of the method call
+            Console.WriteLine($"MoveShipsByHitPoints called for player {playerId} with hitPoints: {hitPoints}");
+            Player player = await _gameFacade.GetPlayerById(playerId);
+
+            if (player == null)
+            {
+                // Log when player is not found
+                Console.WriteLine($"Player with ID {playerId} not found.");
+                await Clients.Caller.SendAsync("LogMessage", $"Player with ID {playerId} not found.");
+                return;
+            }
+
+            if (player.Ships != null && player.Ships.Count > 0)
+            {
+                // Log the player and ship count
+                Console.WriteLine($"Player {playerId} has {player.Ships.Count} ships.");
+
+                foreach (var ship in player.Ships)
+                {
+                    // Log the ship's initial state before moving
+                    string beforeMoveMessage = $"Before moving: Ship {ship.HitPoints} is at position {ship.Coordinates}.";
+                    Console.WriteLine(beforeMoveMessage);  // Log to console
+                    await Clients.Caller.SendAsync("LogMessage", beforeMoveMessage);
+
+                    // Move the ship by the given hit points
+                    ship.MoveByHitPoints(hitPoints);
+
+                    // Log the ship's state after moving
+                    string afterMoveMessage = $"After moving: Ship {ship.HitPoints} is now at position {ship.Coordinates}.";
+                    Console.WriteLine(afterMoveMessage);  // Log to console
+                    await Clients.Caller.SendAsync("LogMessage", afterMoveMessage);
+                }
+
+                // Notify all clients that ships have moved
+                Console.WriteLine($"Ships moved for player {playerId} by {hitPoints} hit points.");
+                await Clients.All.SendAsync("ShipsMoved", hitPoints);
+            }
+            else
+            {
+                // Log when no ships are found for the player
+                Console.WriteLine($"No ships found for player {playerId}.");
+                await Clients.Caller.SendAsync("LogMessage", "No ships found for player.");
+            }
+        }
+
+
+
+
+
+
+
+
         public async Task UpdateGameTime(int timeRemaining)
         {
             // Update the singleton instance
