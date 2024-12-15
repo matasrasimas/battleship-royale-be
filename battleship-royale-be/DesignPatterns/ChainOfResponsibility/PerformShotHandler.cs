@@ -8,7 +8,8 @@ namespace battleship_royale_be.DesignPatterns.ChainOfResponsibility
 {
     public class PerformShotHandler : Handler
     {
-        public override List<Player> Handle(Player attackerPlayer, Player targetPlayer, ShotCoordinates targetCoords, int shotCount, Dictionary<Guid, int> shotsFired, Cell[,] grid, Models.Board board, Ship targetShip)
+        public override List<Player> Handle(Player attackerPlayer, Player targetPlayer, ShotCoordinates targetCoords, int shotCount,
+            Dictionary<Guid, int> shotsFired, Cell[,] grid, Models.Board board, Ship targetShip)
         {
             var attackingShip = attackerPlayer.Ships.FirstOrDefault(ship => ship.HitPoints > 0);
             if (attackingShip == null)
@@ -53,16 +54,19 @@ namespace battleship_royale_be.DesignPatterns.ChainOfResponsibility
 
         private static List<Player> HandleMissedShot(Player attackerPlayer, Player targetPlayer, Models.Board board)
         {
+            int shotsRemaining = attackerPlayer.ShotsRemaining - 1;
             return new List<Player> {
                 PlayerBuilder
                 .From(attackerPlayer)
-                .SetIsYourTurn(false)
+                .SetIsYourTurn(shotsRemaining != 0 && shotsRemaining != -1)
+                .SetShotsRemaining(shotsRemaining)
                 .Build(),
 
                 PlayerBuilder
                 .From(ShipsMover.MoveShips(targetPlayer, new List<Ship>(board.Ships), board.Grid))
                 .SetGameStatus("IN_PROGRESS")
-                .SetIsYourTurn(true)
+                .SetIsYourTurn(shotsRemaining <= 0)
+                .SetShotsRemaining(targetPlayer.Ships.Count <= 2 ? 2 : 1)
                 .Build()
             };
         }
@@ -70,16 +74,19 @@ namespace battleship_royale_be.DesignPatterns.ChainOfResponsibility
         private static List<Player> HandleTurnEnd(Player attackerPlayer, Player targetPlayer, Models.Board board, Dictionary<Guid, int> shotsFired)
         {
             shotsFired[attackerPlayer.Id] = 0;
+            int shotsRemaining = attackerPlayer.ShotsRemaining - 1;
             return new List<Player> {
                 PlayerBuilder
                 .From(attackerPlayer)
-                .SetIsYourTurn(false)
+                .SetIsYourTurn(shotsRemaining != 0)
+                .SetShotsRemaining(shotsRemaining)
                 .Build(),
 
                 PlayerBuilder
                 .From(ShipsMover.MoveShips(targetPlayer, new List<Ship>(board.Ships), board.Grid))
                 .SetGameStatus("IN_PROGRESS")
-                .SetIsYourTurn(true)
+                .SetIsYourTurn(shotsRemaining == 0)
+                .SetShotsRemaining(targetPlayer.Ships.Count <= 2 ? 2 : 1)
                 .Build()
             };
         }

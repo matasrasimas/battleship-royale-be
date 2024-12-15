@@ -1,4 +1,6 @@
 ﻿
+using battleship_royale_be.DesignPatterns.State;
+
 namespace battleship_royale_be.Models
 {
     public class Player : Observer.IObserver
@@ -10,9 +12,12 @@ namespace battleship_royale_be.Models
         public string GameStatus { get; set; }
         public bool IsYourTurn { get; set; }
         public int Points { get; set; }
+        public int ShotsRemaining { get; set; }
+        private PlayerState state;
+
         public Player() { }
 
-        public Player(Guid Id, string ConnectionId, List<Cell> Cells, List<Ship> Ships, string GameStatus, bool IsYourTurn, int Points)
+        public Player(Guid Id, string ConnectionId, List<Cell> Cells, List<Ship> Ships, string GameStatus, bool IsYourTurn, int Points, int ShotsRemaining)
         {
             this.Id = Id;
             this.ConnectionId = ConnectionId;
@@ -21,11 +26,20 @@ namespace battleship_royale_be.Models
             this.GameStatus = GameStatus;
             this.IsYourTurn = IsYourTurn;
             this.Points = Points;
+            this.ShotsRemaining = ShotsRemaining;
         }
 
         public void Update(string msg)
         {
             Console.WriteLine(msg);
+        }
+
+        public void SetState(PlayerState state) {
+            this.state = state;
+        }
+
+        public Game Shoot() {
+            throw new NotImplementedException();
         }
     }
 }
