@@ -9,16 +9,18 @@ namespace battleship_royale_be.Models
         public bool IsHorizontal { get; set; }
         public bool CanMove { get; set; }
         public List<Coordinates> Coordinates { get; set; }
+        public string ImagePath { get; set; }
 
         public Ship() { }
 
-        public Ship(Guid Id, int HitPoints, bool IsHorizontal, bool CanMove, List<Coordinates> Coordinates)
+        public Ship(Guid Id, int HitPoints, bool IsHorizontal, bool CanMove, List<Coordinates> Coordinates, string ImagePath = "")
         {
             this.Id = Id;
             this.HitPoints = HitPoints;
             this.IsHorizontal = IsHorizontal;
             this.CanMove = CanMove;
             this.Coordinates = Coordinates;
+            this.ImagePath = ImagePath;
         }
 
         public Coordinates calculateStartCoordinates()

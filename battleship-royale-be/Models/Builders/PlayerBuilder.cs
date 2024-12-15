@@ -18,7 +18,7 @@
         {
             // Clone cells with new Guid for each one and sort
             List<Cell> clonedCells = player.Cells
-                .Select(cell => new Cell(Guid.NewGuid(), cell.Row, cell.Col, cell.IsHit, cell.IsShip, cell.IsIsland))
+                .Select(cell => new Cell(Guid.NewGuid(), cell.Row, cell.Col, cell.IsHit, cell.IsShip, cell.IsIsland, cell.ImagePath))
                 .OrderBy(c => c.Row)
                 .ThenBy(c => c.Col)
                 .ToList();
@@ -27,7 +27,7 @@
             List<Ship> clonedShips = player.Ships.Select(ship =>
             {
                 var clonedCoordinates = ship.Coordinates.Select(coords => new Coordinates(Guid.NewGuid(), coords.Row, coords.Col)).ToList();
-                return new Ship(Guid.NewGuid(), ship.HitPoints, ship.IsHorizontal, ship.CanMove, clonedCoordinates);
+                return new Ship(Guid.NewGuid(), ship.HitPoints, ship.IsHorizontal, ship.CanMove, clonedCoordinates, ship.ImagePath);
             }).ToList();
 
             return new PlayerBuilder
@@ -72,7 +72,7 @@
         {
             // Clone cells with new Guid for each one and sort
             this.cells = cells
-                .Select(cell => new Cell(Guid.NewGuid(), cell.Row, cell.Col, cell.IsHit, cell.IsShip, cell.IsIsland))
+                .Select(cell => new Cell(Guid.NewGuid(), cell.Row, cell.Col, cell.IsHit, cell.IsShip, cell.IsIsland, cell.ImagePath))
                 .OrderBy(c => c.Row)
                 .ThenBy(c => c.Col)
                 .ToList();
@@ -85,7 +85,7 @@
             this.ships = ships.Select(ship =>
             {
                 var clonedCoordinates = ship.Coordinates.Select(coords => new Coordinates(Guid.NewGuid(), coords.Row, coords.Col)).ToList();
-                return new Ship(Guid.NewGuid(), ship.HitPoints, ship.IsHorizontal, ship.CanMove, clonedCoordinates);
+                return new Ship(Guid.NewGuid(), ship.HitPoints, ship.IsHorizontal, ship.CanMove, clonedCoordinates, ship.ImagePath);
             }).ToList();
             return this;
         }

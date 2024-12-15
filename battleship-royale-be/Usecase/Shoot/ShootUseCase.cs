@@ -1,4 +1,5 @@
 ﻿using battleship_royale_be.Data;
+using battleship_royale_be.DesignPatterns.ChainOfResponsibility;
 using battleship_royale_be.Models;
 using battleship_royale_be.Models.Builders;
 using Microsoft.EntityFrameworkCore;
@@ -44,6 +45,7 @@ namespace battleship_royale_be.Usecase.Shoot
             Player? attackerPlayer = gameToUpdate.Players.Where(player => player.ConnectionId == connectionId).FirstOrDefault();
             if (attackerPlayer == null)
                 return null;
+
 
             List<Player> playersAfterShot = ShotHandler.HandleShot(attackerPlayer, targetPlayer, shotCoords, shotCount);
             List<Player> updatedPlayersList = new List<Player>();

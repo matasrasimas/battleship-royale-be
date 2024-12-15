@@ -9,6 +9,7 @@ namespace battleship_royale_be.Models.Builders
         private bool isHorizontal;
         private bool canMove;
         private List<Coordinates> coordinates;
+        private string imagePath;
 
         private ShipBuilder() { }
 
@@ -20,7 +21,8 @@ namespace battleship_royale_be.Models.Builders
                 hitPoints = ship.HitPoints,
                 isHorizontal = ship.IsHorizontal,
                 canMove = ship.CanMove,
-                coordinates = new List<Coordinates>(ship.Coordinates)
+                coordinates = new List<Coordinates>(ship.Coordinates),
+                imagePath = ship.ImagePath
             };
             return builder;
         }
@@ -33,7 +35,8 @@ namespace battleship_royale_be.Models.Builders
                 hitPoints = 3,
                 isHorizontal = false,
                 canMove = false,
-                coordinates = new List<Coordinates>()
+                coordinates = new List<Coordinates>(),
+                imagePath = ""
             };
             return builder;
         }
@@ -62,9 +65,15 @@ namespace battleship_royale_be.Models.Builders
             return this;
         }
 
+        public ShipBuilder SetImagePath(string imagePath)
+        {
+            this.imagePath = imagePath;
+            return this;
+        }
+        
         public Ship Build()
         {
-            return new Ship(id, hitPoints, isHorizontal, canMove, coordinates);
+            return new Ship(id, hitPoints, isHorizontal, canMove, coordinates, imagePath);
         }
 
         //public Ship BuildLevel1Ship()
