@@ -141,6 +141,7 @@ namespace battleship_royale_be.DesignPatterns.Facade
                 int randomIndex = random.Next(gameAfterAddedPlayer.Players.Count);
                 Player randomPlayer = gameAfterAddedPlayer.Players[randomIndex];
                 randomPlayer.IsYourTurn = true;
+                randomPlayer.ShotsRemaining = 1;
             }
 
             foreach (Player player in game.Players)

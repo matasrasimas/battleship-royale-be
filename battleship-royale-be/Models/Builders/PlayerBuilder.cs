@@ -9,6 +9,7 @@
         private string gameStatus;
         private bool isYourTurn;
         private int points;
+        private int shotsRemaining;
 
         private PlayerBuilder()
         {
@@ -39,6 +40,7 @@
                 gameStatus = player.GameStatus,
                 isYourTurn = player.IsYourTurn,
                 points = player.Points,
+                shotsRemaining = player.ShotsRemaining,
             };
         }
 
@@ -53,6 +55,7 @@
                 gameStatus = "IN_PROGRESS",
                 isYourTurn = false,
                 points = 0,
+                shotsRemaining = 1,
             };
         }
 
@@ -108,9 +111,14 @@
             return this;
         }
 
+        public PlayerBuilder SetShotsRemaining(int shotsRemaining) {
+            this.shotsRemaining = shotsRemaining;
+            return this;
+        }
+
         public Player Build()
         {
-            return new Player(id, connectionId, cells, ships, gameStatus, isYourTurn, points);
+            return new Player(id, connectionId, cells, ships, gameStatus, isYourTurn, points, shotsRemaining);
         }
 
         private static Cell[,] CreateGridFromCells(List<Cell> cells)
