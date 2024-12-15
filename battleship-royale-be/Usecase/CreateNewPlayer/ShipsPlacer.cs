@@ -1,4 +1,5 @@
-﻿using battleship_royale_be.Models;
+﻿using battleship_royale_be.DesignPatterns.Iterator;
+using battleship_royale_be.Models;
 using battleship_royale_be.Models.Builders;
 
 namespace battleship_royale_be.Usecase.StartNewGame
@@ -15,10 +16,19 @@ namespace battleship_royale_be.Usecase.StartNewGame
             int shipsLimit = gameLevel == 2 ? 10 : 6;
 
             List<Ship> ships = ShipsListGenerator.Generate(gameLevel);
-            foreach (Ship ship in ships)
+
+            // Create a ShipIterator to iterate through the list of ships
+            ShipIterator shipIterator = new ShipIterator(ships);
+
+            // Iterate through all ships and place them on the board
+            while (shipIterator.HasNext())
             {
+                Ship ship = shipIterator.Next();
+
+                // Place each ship randomly on the board
                 board = PlaceShipRandomly(board, ship, gameLevel, shipsLimit);
             }
+
             return board;
         }
 

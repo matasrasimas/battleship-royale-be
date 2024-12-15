@@ -1,4 +1,5 @@
 using battleship_royale_be.Data;
+using battleship_royale_be.DesignPatterns.Iterator;
 using battleship_royale_be.Models;
 using battleship_royale_be.Models.Builders;
 using battleship_royale_be.Usecase.Shoot;
@@ -60,19 +61,32 @@ namespace battleship_royale_be.Usecase.Pause
 
             foreach (Player player in gameToUpdate.Players)
             {
+                // Remove all cells associated with the player
                 foreach (Cell cell in player.Cells)
-                    _context.Cells.Remove(cell);
-
-                foreach (Ship ship in player.Ships)
                 {
-                    foreach (Coordinates coords in ship.Coordinates)
+                    _context.Cells.Remove(cell);
+                }
+
+                // Use ShipIterator to iterate through each ship
+                ShipIterator shipIterator = new ShipIterator(player.Ships);
+                while (shipIterator.HasNext())
+                {
+                    Ship ship = shipIterator.Next();
+
+                    // Use CoordinatesIterator to iterate through coordinates of the ship
+                    CoordinatesIterator coordsIterator = new CoordinatesIterator(ship.Coordinates);
+                    while (coordsIterator.HasNext())
                     {
+                        Coordinates coords = coordsIterator.Next();
                         _context.Coordinates.Remove(coords);
                     }
+
                     _context.Ships.Remove(ship);
                 }
+
                 _context.Players.Remove(player);
             }
+
             _context.Games.Remove(gameToUpdate);
 
             await _context.Games.AddAsync(gameAfterPause);
