@@ -1,9 +1,10 @@
-﻿
 using battleship_royale_be.DesignPatterns.State;
+using battleship_royale_be.DesignPatterns.Composite;
+
 
 namespace battleship_royale_be.Models
 {
-    public class Player : Observer.IObserver
+    public class Player : Observer.IObserver, IShipComponent
     {
         public Guid Id { get; set; }
         public string ConnectionId { get; set; }
@@ -14,6 +15,7 @@ namespace battleship_royale_be.Models
         public int Points { get; set; }
         public int ShotsRemaining { get; set; }
         private PlayerState state;
+
 
         public Player() { }
 
@@ -34,12 +36,22 @@ namespace battleship_royale_be.Models
             Console.WriteLine(msg);
         }
 
+
         public void SetState(PlayerState state) {
             this.state = state;
         }
 
         public Game Shoot() {
             throw new NotImplementedException();
+        }
+
+        // Move ships based on hit points
+        public void MoveByHitPoints(int hitPoints)
+        {
+            foreach (var ship in Ships)
+            {
+                ship.MoveByHitPoints(hitPoints);
+            }
         }
     }
 }
