@@ -48,7 +48,7 @@ namespace battleship_royale_be.DesignPatterns.ChainOfResponsibility
             var newGrid = (Cell[,])board.Grid.Clone();
             var cell = newGrid[targetCoords.Row, targetCoords.Col];
             newGrid[targetCoords.Row, targetCoords.Col] =
-                new Cell(Guid.NewGuid(), targetCoords.Row, targetCoords.Col, true, cell.IsShip, cell.IsIsland, cell.ImagePath);
+                new Cell(Guid.NewGuid(), targetCoords.Row, targetCoords.Col, true, cell.IsShip, cell.IsIsland, cell.ImagePath, cell.Color);
             return newGrid;
         }
 

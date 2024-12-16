@@ -19,7 +19,7 @@
         {
             // Clone cells with new Guid for each one and sort
             List<Cell> clonedCells = player.Cells
-                .Select(cell => new Cell(Guid.NewGuid(), cell.Row, cell.Col, cell.IsHit, cell.IsShip, cell.IsIsland, cell.ImagePath))
+                .Select(cell => new Cell(Guid.NewGuid(), cell.Row, cell.Col, cell.IsHit, cell.IsShip, cell.IsIsland, cell.ImagePath, cell.Color))
                 .OrderBy(c => c.Row)
                 .ThenBy(c => c.Col)
                 .ToList();
@@ -75,7 +75,7 @@
         {
             // Clone cells with new Guid for each one and sort
             this.cells = cells
-                .Select(cell => new Cell(Guid.NewGuid(), cell.Row, cell.Col, cell.IsHit, cell.IsShip, cell.IsIsland, cell.ImagePath))
+                .Select(cell => new Cell(Guid.NewGuid(), cell.Row, cell.Col, cell.IsHit, cell.IsShip, cell.IsIsland, cell.ImagePath,cell.Color))
                 .OrderBy(c => c.Row)
                 .ThenBy(c => c.Col)
                 .ToList();
