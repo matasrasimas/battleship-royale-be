@@ -4,7 +4,7 @@ using battleship_royale_be.DesignPatterns.Composite;
 
 namespace battleship_royale_be.Models
 {
-    public class Player : Observer.IObserver, IShipComponent
+    public class Player : Observer.IObserver
     {
         public Guid Id { get; set; }
         public string ConnectionId { get; set; }

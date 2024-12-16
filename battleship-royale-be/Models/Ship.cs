@@ -1,8 +1,12 @@
 ﻿using battleship_royale_be.DesignPatterns.Composite;
+using battleship_royale_be.Models.Builders;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace battleship_royale_be.Models
 {
-    public class Ship : ICloneable
+    public class Ship : IShipComponent, ICloneable
     {
         public Guid Id { get; set; }
         public int HitPoints { get; set; }
@@ -42,35 +46,62 @@ namespace battleship_royale_be.Models
             return IsHorizontal ? startCoords.Col + HitPoints - 1 : startCoords.Col;
         }
 
-    
+        private int CalculateShipEndRow(Coordinates startCoords)
+        {
+            return IsHorizontal ? startCoords.Row : startCoords.Row + HitPoints - 1;
+        }
+
+        public Board Damage(Board board)
+        {
+            var updatedShip = ShipBuilder
+                .From(this)
+                .SetHitPoints(this.HitPoints - 1)
+                .Build();
+            var updatedShipsList = new List<Ship>(board.Ships);
+            var shipIndex = updatedShipsList.IndexOf(this);
+            if (shipIndex != -1)
+            {
+                updatedShipsList[shipIndex] = updatedShip;
+            }
+
+            return BoardBuilder
+                .From(board)
+                .SetShips(updatedShipsList)
+                .Build();
+        }
+        public Board Destroy(Board board)
+        {
+            var updatedShipsList = new List<Ship>(board.Ships);
+            updatedShipsList.Remove(this);
+
+            return BoardBuilder
+                .From(board)
+                .SetShips(updatedShipsList)
+                .Build();
+        }
 
         public void MoveByHitPoints(int hitPoints)
         {
-             if (!CanMove)
+            if (!CanMove)
             {
                 Console.WriteLine($"Ship {Id} cannot move or isn't part of the fleet.");
                 return;
             }
-            if(HitPoints == hitPoints)
+            if (HitPoints == hitPoints)
             {
-            var random = new Random();
-            int deltaRow = random.Next(-1, 2);
-            int deltaCol = random.Next(-1, 2);
-            for (int i = 0; i < Coordinates.Count; i++)
-            {
-                Coordinates[i] = new Coordinates(
-                    Coordinates[i].Id,
-                    Coordinates[i].Row + deltaRow,
-                    Coordinates[i].Col + deltaCol
-                );
+                var random = new Random();
+                int deltaRow = random.Next(-1, 2);
+                int deltaCol = random.Next(-1, 2);
+                for (int i = 0; i < Coordinates.Count; i++)
+                {
+                    Coordinates[i] = new Coordinates(
+                        Coordinates[i].Id,
+                        Coordinates[i].Row + deltaRow,
+                        Coordinates[i].Col + deltaCol
+                    );
+                }
+                Console.WriteLine($"Ship {Id} moved to new coordinates.");
             }
-            Console.WriteLine($"Ship {Id} moved to new coordinates.");
-            }
-        }
-
-        private int CalculateShipEndRow(Coordinates startCoords)
-        {
-            return IsHorizontal ? startCoords.Row : startCoords.Row + HitPoints - 1;
         }
 
         public object ShallowClone()
@@ -80,7 +111,7 @@ namespace battleship_royale_be.Models
 
         public object Clone()
         {
-            Ship clone = (Ship) this.MemberwiseClone();
+            Ship clone = (Ship)this.MemberwiseClone();
             clone.Coordinates = this.Coordinates.Select(item => (Coordinates)item.Clone()).ToList();
             return clone;
         }
