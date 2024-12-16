@@ -23,6 +23,20 @@ namespace battleship_royale_be.Models
             this.Points = Points;
         }
 
+        public Player DeepClone()
+        {
+            return new Player
+            {
+                Id = Id,
+                ConnectionId = ConnectionId,
+                Cells = Cells.Select(item => (Cell)item.DeepClone()).ToList(),
+                Ships = Ships.Select(item => (Ship)item.Clone()).ToList(),
+                GameStatus = GameStatus,
+                IsYourTurn = IsYourTurn,
+                Points = Points
+            };
+        }
+
         public void Update(string msg)
         {
             Console.WriteLine(msg);

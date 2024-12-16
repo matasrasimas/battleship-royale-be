@@ -110,6 +110,37 @@ namespace battleship_royale_be.Hubs
             }
         }
 
+        public async Task SnapshotGame()
+        {
+            var caretaker = await _gameFacade.FindPlayerSnapshot(Context.ConnectionId);
+            if(caretaker != null)
+            {
+                await Clients.Caller
+                .SendAsync("SnapshotSaved", "Already created");
+                return;
+            }
+            var conn = await _gameFacade.GetUserConnectionById(Context.ConnectionId);
+            await _gameFacade.CreateSnapshot(conn);
+            await Clients.Caller
+                .SendAsync("SnapshotSaved", "Created");
+        }
+
+        public async Task UndoWithSnapshotGame(Game gameBackup)
+        {
+            var caretaker = await _gameFacade.FindPlayerSnapshot(Context.ConnectionId);
+            if (caretaker == null)
+            {
+                return;
+            }
+            var conn = await _gameFacade.GetUserConnectionById(Context.ConnectionId);
+            Game gameAfterUndo = await _gameFacade.UseSnapshot(caretaker, conn, gameBackup);
+            if (gameAfterUndo != null)
+            {
+                await Clients.Group(conn.GameId)
+                    .SendAsync("ReceiveGameAfterUndoWithSnapshot", gameAfterUndo, "Completed");
+            }
+        }
+
         public async Task SendMessage(string message)
         {
             IExpression expression = CommandParser.Parse(message);

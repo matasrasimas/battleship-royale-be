@@ -1,4 +1,5 @@
 ﻿using battleship_royale_be.Data;
+using battleship_royale_be.DesignPatterns.Memento;
 using battleship_royale_be.Models;
 using battleship_royale_be.Models.Builders;
 using battleship_royale_be.Models.Command;
@@ -11,7 +12,9 @@ using battleship_royale_be.Usecase.Shoot;
 using battleship_royale_be.Usecase.StartNewGame;
 using battleship_royale_be.Usecase.Surrender;
 using Microsoft.EntityFrameworkCore;
+using System;
 using System.Runtime.InteropServices;
+using System.Text.Json;
 
 namespace battleship_royale_be.DesignPatterns.Facade
 {
@@ -74,6 +77,11 @@ namespace battleship_royale_be.DesignPatterns.Facade
             return await _findGameUseCase.FindGame();
         }
 
+        public async Task<Caretaker> FindPlayerSnapshot(string PlayerGuid)
+        {
+            return await _context.Caretakers.Where(care => care.PlayerId == PlayerGuid).FirstOrDefaultAsync();
+        }
+
         public async Task<UserConnection> GetUserConnectionById(string connectionId)
         {
             return await _context.UserConnections.Where(conn => conn.Id == connectionId).FirstOrDefaultAsync();
@@ -93,6 +101,50 @@ namespace battleship_royale_be.DesignPatterns.Facade
         public async Task<Game> PauseGame(UserConnection conn)
         {
             return await _commandController.Run(new PauseCommand(_pauseUseCase, Guid.Parse(conn.GameId), conn.Id));
+        }
+
+        public async Task CreateSnapshot(UserConnection user)
+        {
+            Game? gameToSave = await _context.Games
+                .Include(game => game.Players)
+                    .ThenInclude(player => player.Cells)
+                .Include(game => game.Players)
+                    .ThenInclude(player => player.Ships)
+                       .ThenInclude(ship => ship.Coordinates)
+                .Where(g => g.Id.ToString() == user.GameId)
+                .FirstOrDefaultAsync();
+
+            Caretaker caretaker = new Caretaker(user.Id, gameToSave);
+            caretaker.Backup();
+            await _context.Caretakers.AddAsync(caretaker);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<Game> UseSnapshot(Caretaker caretaker, UserConnection conn, Game gameBackup)
+        {
+            caretaker.Undo();
+            Game gameToLoad = await FindGameById(conn.GameId);
+            Game game = GameBuilder.From(gameToLoad).SetPlayers(gameBackup.Players).SetShotResultMessage(gameBackup.ShotResultMessage).Build();
+            foreach (Player player in gameToLoad.Players)
+            {
+                foreach (Cell cell in player.Cells)
+                {
+                    _context.Cells.Remove(cell);
+                }
+                foreach (Ship ship in player.Ships)
+                {
+                    foreach (Coordinates coord in ship.Coordinates)
+                    {
+                        _context.Coordinates.Remove(coord);
+                    }
+                    _context.Ships.Remove(ship);
+                }
+                _context.Players.Remove(player);
+            }
+            _context.Games.Remove(gameToLoad);
+            await _context.Games.AddAsync(game);
+            await _context.SaveChangesAsync();
+            return game;
         }
 
         public async Task<Game> Undo(string connectionId)

@@ -10,6 +10,7 @@ using battleship_royale_be.Usecase.Surrender;
 using battleship_royale_be.Models.Command;
 using battleship_royale_be.Usecase.Pause;
 using battleship_royale_be.Models.Observer;
+using Microsoft.Extensions.Options;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -34,6 +35,7 @@ builder.Services.AddSingleton<Subject, Server>();
 builder.Services.AddSingleton<CommandController>();
 builder.Services.AddSignalR(o => {
     o.EnableDetailedErrors = true;
+    o.MaximumReceiveMessageSize = 64 * 1024;
 });
 
 var app = builder.Build();

@@ -19,5 +19,10 @@
             this.IsIsland = IsIsland;
             this.ImagePath = ImagePath;
         }
+
+        public Cell DeepClone()
+        {
+            return (Cell)this.MemberwiseClone();
+        }
     }
 }

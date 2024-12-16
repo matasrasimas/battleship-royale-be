@@ -1,5 +1,7 @@
-﻿using battleship_royale_be.Models;
+﻿using battleship_royale_be.DesignPatterns.Memento;
+using battleship_royale_be.Models;
 using Microsoft.EntityFrameworkCore;
+using System;
 
 namespace battleship_royale_be.Data
 {
@@ -14,5 +16,6 @@ namespace battleship_royale_be.Data
         public DbSet<Cell> Cells { get; set; }
         public DbSet<Coordinates> Coordinates { get; set; }
         public DbSet<UserConnection> UserConnections { get; set; }
+        public DbSet<Caretaker> Caretakers { get; set; }
     }
 }
