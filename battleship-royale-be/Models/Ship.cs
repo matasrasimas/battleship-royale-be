@@ -1,4 +1,6 @@
-﻿namespace battleship_royale_be.Models
+﻿using battleship_royale_be.DesignPatterns.Composite;
+
+namespace battleship_royale_be.Models
 {
     public class Ship : ICloneable
     {
@@ -38,6 +40,32 @@
         private int CalculateShipEndColumn(Coordinates startCoords)
         {
             return IsHorizontal ? startCoords.Col + HitPoints - 1 : startCoords.Col;
+        }
+
+    
+
+        public void MoveByHitPoints(int hitPoints)
+        {
+             if (!CanMove)
+            {
+                Console.WriteLine($"Ship {Id} cannot move or isn't part of the fleet.");
+                return;
+            }
+            if(HitPoints == hitPoints)
+            {
+            var random = new Random();
+            int deltaRow = random.Next(-1, 2);
+            int deltaCol = random.Next(-1, 2);
+            for (int i = 0; i < Coordinates.Count; i++)
+            {
+                Coordinates[i] = new Coordinates(
+                    Coordinates[i].Id,
+                    Coordinates[i].Row + deltaRow,
+                    Coordinates[i].Col + deltaCol
+                );
+            }
+            Console.WriteLine($"Ship {Id} moved to new coordinates.");
+            }
         }
 
         private int CalculateShipEndRow(Coordinates startCoords)

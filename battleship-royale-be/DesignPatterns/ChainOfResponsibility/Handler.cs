@@ -12,7 +12,8 @@ namespace battleship_royale_be.DesignPatterns.ChainOfResponsibility
             return this;
         }
 
-        protected List<Player> HandleNext(Player attackerPlayer, Player targetPlayer, ShotCoordinates targetCoords, int shotCount, Dictionary<Guid, int> shotsFired, Cell[,] grid, Board board, Ship targetShip) {
+        protected List<Player> HandleNext(Player attackerPlayer, Player targetPlayer, ShotCoordinates targetCoords, int shotCount,
+            Dictionary<Guid, int> shotsFired, Cell[,] grid, Board board, Ship targetShip) {
             if (next == null)
                 return new List<Player> {
                     PlayerBuilder.From(attackerPlayer).Build(),
@@ -22,6 +23,7 @@ namespace battleship_royale_be.DesignPatterns.ChainOfResponsibility
             return next.Handle(attackerPlayer, targetPlayer, targetCoords, shotCount, shotsFired, grid, board, targetShip);
         }
 
-        public abstract List<Player> Handle(Player attackerPlayer, Player targetPlayer, ShotCoordinates targetCoords, int shotCount, Dictionary<Guid, int> shotsFired, Cell[,] grid, Board board, Ship targetShip);
+        public abstract List<Player> Handle(Player attackerPlayer, Player targetPlayer, ShotCoordinates targetCoords, int shotCount,
+            Dictionary<Guid, int> shotsFired, Cell[,] grid, Board board, Ship targetShip);
     }
 }

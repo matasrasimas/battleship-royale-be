@@ -9,6 +9,7 @@ using battleship_royale_be.Models.Observer;
 using battleship_royale_be.Usecase.CreateNewGame;
 using battleship_royale_be.Usecase.FindGameUseCase;
 using battleship_royale_be.Usecase.GetGameById;
+using battleship_royale_be.Usecase.Move;
 using battleship_royale_be.Usecase.Pause;
 using battleship_royale_be.Usecase.Shoot;
 using battleship_royale_be.Usecase.StartNewGame;
@@ -26,6 +27,7 @@ namespace battleship_royale_be.Hubs
             ICreateNewPlayerUseCase createNewPlayerUseCase,
             IGetGameByIdUseCase getGameByIdUseCase,
             IShootUseCase shootUseCase,
+            IMoveUseCase moveUseCase,
             IAddPlayerToGameUseCase addPlayerToGameUseCase,
             ISurrenderUseCase surrenderUseCase,
             IPauseUseCase pauseUseCase,
@@ -37,6 +39,7 @@ namespace battleship_royale_be.Hubs
                 createNewPlayerUseCase,
                 getGameByIdUseCase,
                 shootUseCase,
+                moveUseCase,
                 addPlayerToGameUseCase,
                 surrenderUseCase,
                 pauseUseCase,
@@ -44,6 +47,31 @@ namespace battleship_royale_be.Hubs
                 commandController,
                 server);
         }
+
+
+
+        public async Task MoveShipsByHitPoints(int hitPoints)
+        {
+            var conn = await _gameFacade.GetUserConnectionById(Context.ConnectionId);
+            if (conn != null)
+            {
+                Console.WriteLine("You have chosen this many hitpoints " +  hitPoints.ToString());
+                Game gameAfterShipMove = await _gameFacade.MoveShipsByHitPoints(hitPoints, conn);
+                if (gameAfterShipMove != null)
+                {
+                    _gameFacade.NotifyAll("Player " + Context.ConnectionId + "moved " +hitPoints + "hitpoints fleet");
+                    await Clients.Group(conn.GameId)
+                        .SendAsync("ReceiveGameAfterShipMove", conn.Id, gameAfterShipMove);
+                }
+            }
+        }
+
+
+
+
+
+
+
 
         public async Task UpdateGameTime(int timeRemaining)
         {

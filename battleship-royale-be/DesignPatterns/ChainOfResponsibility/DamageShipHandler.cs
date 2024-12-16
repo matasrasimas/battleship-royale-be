@@ -9,7 +9,8 @@ namespace battleship_royale_be.DesignPatterns.ChainOfResponsibility
 {
     public class DamageShipHandler : Handler
     {
-        public override List<Player> Handle(Player attackerPlayer, Player targetPlayer, ShotCoordinates targetCoords, int shotCount, Dictionary<Guid, int> shotsFired, Cell[,] grid, Board board, Ship targetShip)
+        public override List<Player> Handle(Player attackerPlayer, Player targetPlayer, ShotCoordinates targetCoords,
+            int shotCount, Dictionary<Guid, int> shotsFired, Cell[,] grid, Board board, Ship targetShip)
         {
             var newGrid = MarkCellAsHit(board, targetCoords);
             var newBoard = new Board(newGrid, new List<Ship>(board.Ships));
