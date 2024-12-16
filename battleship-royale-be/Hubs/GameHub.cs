@@ -1,7 +1,9 @@
-﻿using System.Text.RegularExpressions;
+﻿using System;
+using System.Text.RegularExpressions;
 using battleship_royale_be.Data;
 using battleship_royale_be.DesignPatterns.Facade;
 using battleship_royale_be.DesignPatterns.Interpreter;
+using battleship_royale_be.DesignPatterns.Visitor;
 using battleship_royale_be.Models;
 using battleship_royale_be.Models.Builders;
 using battleship_royale_be.Models.Command;
@@ -16,6 +18,7 @@ using battleship_royale_be.Usecase.StartNewGame;
 using battleship_royale_be.Usecase.Surrender;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 
 namespace battleship_royale_be.Hubs
 {
@@ -66,13 +69,6 @@ namespace battleship_royale_be.Hubs
             }
         }
 
-
-
-
-
-
-
-
         public async Task UpdateGameTime(int timeRemaining)
         {
             // Update the singleton instance
@@ -81,7 +77,6 @@ namespace battleship_royale_be.Hubs
             // Notify all clients about the updated time
             await Clients.All.SendAsync("ReceiveTimeUpdate", GameTime.Instance.TimeRemaining);
         }
-
 
         public async Task JoinSpecificGame(UserConnection conn)
         {
@@ -266,5 +261,27 @@ namespace battleship_royale_be.Hubs
             await Clients.Caller
                 .SendAsync("ReceiveMessage", "System", "Command not found");
         }
+
+        public async Task ChangeShipSkin(int skinType)
+        {
+            var conn = await _gameFacade.GetUserConnectionById(Context.ConnectionId);
+            Game game = null;
+            Console.WriteLine(skinType);
+            if(skinType == 1)
+            {
+                game = await _gameFacade.ApplySkin(conn, new ShipSkinOne());
+            }
+            if (skinType == 2)
+            {
+                game = await _gameFacade.ApplySkin(conn, new ShipSkinTwo());
+            }
+            if (skinType == 3)
+            {
+                game = await _gameFacade.ApplySkin(conn, new ShipSkinThree());
+            }
+            await Clients.Group(conn.GameId)
+                .SendAsync("AppliedSkin", game);
+        }
+
     }
 }

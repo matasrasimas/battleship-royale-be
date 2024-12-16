@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using battleship_royale_be.Data;
 
@@ -11,9 +12,11 @@ using battleship_royale_be.Data;
 namespace battleship_royale_be.Migrations
 {
     [DbContext(typeof(BattleshipAPIContext))]
-    partial class BattleshipAPIContextModelSnapshot : ModelSnapshot
+    [Migration("20241216032420_Visitor")]
+    partial class Visitor
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

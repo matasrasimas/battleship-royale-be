@@ -1,5 +1,7 @@
 ﻿using battleship_royale_be.Data;
+using battleship_royale_be.DesignPatterns.Adapter_Flyweight;
 using battleship_royale_be.DesignPatterns.Memento;
+using battleship_royale_be.DesignPatterns.Visitor;
 using battleship_royale_be.Models;
 using battleship_royale_be.Models.Builders;
 using battleship_royale_be.Models.Command;
@@ -13,6 +15,7 @@ using battleship_royale_be.Usecase.Shoot;
 using battleship_royale_be.Usecase.StartNewGame;
 using battleship_royale_be.Usecase.Surrender;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 using System;
 using System.Runtime.InteropServices;
 using System.Text.Json;
@@ -226,12 +229,12 @@ namespace battleship_royale_be.DesignPatterns.Facade
         {
             return await _commandController.Run(new ShootCommand(_shootUseCase, Guid.Parse(conn.GameId), shotCoords, conn.Id, shotCount));
         }
-        
+
         public async Task<Game> MoveShipsByHitPoints(int hitpoints, UserConnection conn)
         {
             return await _commandController.Run(new MoveCommand(_moveUseCase, Guid.Parse(conn.GameId), conn.Id, hitpoints));
         }
-        
+
         public async Task<Game> TryToSurrender(string connectionId)
         {
             var conn = await GetUserConnectionById(connectionId);
@@ -254,6 +257,41 @@ namespace battleship_royale_be.DesignPatterns.Facade
             return connectionToRemove;
         }
 
+        public List<IShip> ConvertToShipArray(List<Cell> cells)
+        {
+            List<IShip> array = new List<IShip>();
+            foreach (Cell cell in cells)
+            {
+                if (cell.IsShip)
+                {
+                    if (cell.ImagePath == "/images/battleship.png")
+                    {
+                        array.Add(new Battleship());
+                    }
+                    if (cell.ImagePath == "/images/carrier.png")
+                    {
+                        array.Add(new Carrier());
+                    }
+                    if (cell.ImagePath == "/images/cruiser.png")
+                    {
+                        array.Add(new Cruiser());
+                    }
+                    if (cell.ImagePath == "/images/destroyer.png")
+                    {
+                        array.Add(new Destroyer());
+                    }
+                    if (cell.ImagePath == "/images/submarine.png")
+                    {
+                        array.Add(new Submarine());
+                    }
+                }
+                else
+                {
+                    array.Add(null);
+                }
+            }
+            return array;
+        }
         public async Task<Game> GetNextLevel(UserConnection conn)
         {
             var gameToUpdate = await FindGameById(conn.GameId);
@@ -298,5 +336,56 @@ namespace battleship_royale_be.DesignPatterns.Facade
             await _context.SaveChangesAsync();
             return gameWithUpdatedPlayers;
         }
+
+        public async Task<Game> ApplySkin(UserConnection conn, IVisitor visitor)
+        {
+            Game game = await FindGameById(conn.GameId);
+
+            foreach (Player p in game.Players)
+            {
+                foreach (Cell cell in p.Cells)
+                {
+                    _context.Cells.Remove(cell);
+                }
+                foreach (Ship ship in p.Ships)
+                {
+                    foreach (Coordinates coord in ship.Coordinates)
+                    {
+                        _context.Coordinates.Remove(coord);
+                    }
+                    _context.Ships.Remove(ship);
+                }
+                _context.Players.Remove(p);
+            }
+            _context.Games.Remove(game);
+
+            Game gameToSave = GameBuilder.From(game).SetPlayers(game.Players).SetShotResultMessage(game.ShotResultMessage).Build();
+            
+
+            Player player = gameToSave.Players.FirstOrDefault(p => p.ConnectionId == conn.Id);
+            List<IShip> list = ConvertToShipArray(player.Cells);
+
+            foreach (var ship in list)
+            {
+                if (ship != null)
+                {
+                    ship.Accept(visitor);
+                }
+            }
+
+            for (int i = 0; i < list.Count; i++)
+            {
+                if (list[i] != null)
+                {
+                    player.Cells[i].Color = list[i].GetColor();
+                }
+            }
+            Console.WriteLine(JsonConvert.SerializeObject(gameToSave, Formatting.Indented));
+            await _context.Games.AddAsync(gameToSave);
+            await _context.SaveChangesAsync();
+            return gameToSave;
+        }
+
+
     }
 }
